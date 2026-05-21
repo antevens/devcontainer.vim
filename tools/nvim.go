@@ -8,11 +8,11 @@ import (
 	"github.com/mikoto2000/devcontainer.vim/v3/util"
 )
 
-// NeoVim のダウンロード URL
+// Download URL for NeoVim
 const nvimAppImageDownloadURLPattern = "https://github.com/neovim/neovim/releases/download/{{ .TagName }}/nvim-linux-x86_64.appimage"
 const nvimArmStaticDownloadURLPattern = "https://github.com/mikoto2000/vim-static/releases/download/{{ .TagName }}/vim-{{ .TagName }}-aarch64.tar.gz"
 
-// NeoVim のツール情報
+// Tool information for NeoVim
 var NVIM = func(service InstallerUseServices) Tool {
 	return Tool{
 		FileName: "nvim",

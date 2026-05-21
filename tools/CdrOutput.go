@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// `clipboard-data-receiver` コマンドの標準出力スキーマ
+// Standard output schema for the `clipboard-data-receiver` command
 //
 // Example:
 //

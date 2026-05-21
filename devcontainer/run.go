@@ -32,7 +32,7 @@ func (e *ChmodError) Error() string {
 	return e.msg
 }
 
-// docker run で、ワンショットでコンテナを立ち上げる
+// Set up a container in a single shot with `docker run`
 func Run(
 	args []string,
 	noCdr bool,
@@ -46,7 +46,7 @@ func Run(
 	vimrc string,
 	defaultRunargs []string) error {
 
-	// コンテナのセットアップ
+	// Container setup
 	containerID, vimFileName, tmuxFileName, sendToTCP, containerArch, useSystemVim, useSystemTmux, cdrPid, cdrConfigDir, err := setupContainer(
 		args,
 		noCdr,
@@ -59,8 +59,8 @@ func Run(
 		vimrc,
 		defaultRunargs)
 
-	// 後片付け
-	// clipboard-data-receiver を停止
+	// Cleanup
+	// Stop clipboard-data-receiver
 	defer func() {
 		err = tools.KillCdr(cdrPid)
 		if err != nil {
@@ -73,9 +73,9 @@ func Run(
 		}
 	}()
 
-	// コンテナ停止
+	// Stop container
 	defer func() {
-		// `docker stop <dockerrun 時に標準出力に表示される CONTAINER ID>`
+		// `docker stop <CONTAINER ID displayed on stdout during dockerrun>`
 		fmt.Printf("Stop container(Async) %s.\n", containerID)
 		err = exec.Command(containerCommand, "stop", containerID).Start()
 		if err != nil {
@@ -83,8 +83,8 @@ func Run(
 		}
 	}()
 
-	// コンテナへ接続
-	// `docker exec <dockerrun 時に標準出力に表示される CONTAINER ID> /Vim-AppImage`
+	// Connect to the container
+	// `docker exec <CONTAINER ID displayed on stdout during dockerrun> /Vim-AppImage`
 
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()
@@ -112,10 +112,10 @@ func Run(
 	return nil
 }
 
-// コンテナを起動し、コンテナIDを返す
+// Start the container and return the container ID
 func startContainer(args []string, defaultRunargs []string) (string, error) {
 	devcontainerRunArgs := devcontainerRunArgsPrefix
-	// windows でなければ、 runargs を使用する
+	// Use runargs if not on Windows
 	if runtime.GOOS != "windows" {
 		devcontainerRunArgs = append(devcontainerRunArgs, defaultRunargs...)
 	}
@@ -139,7 +139,7 @@ func startContainer(args []string, defaultRunargs []string) (string, error) {
 	return containerID, nil
 }
 
-// clipboard-data-receiverを起動する
+// Start clipboard-data-receiver
 func startClipboardReceiver(cdrPath, configDirForDocker, containerID string) (int, int, string, error) {
 	configDirForCdr := filepath.Join(configDirForDocker, containerID)
 	err := os.MkdirAll(configDirForCdr, 0744)
@@ -166,19 +166,19 @@ func setupContainer(
 	vimrc string,
 	defaultRunargs []string) (string, string, string, string, string, bool, bool, int, string, error) {
 
-	// 1. コンテナを起動
+	// 1. Start the container
 	containerID, err := startContainer(args, defaultRunargs)
 	if err != nil {
 		return "", "", "", "", "", false, false, 0, "", err
 	}
 
-	// 2. コンテナアーキテクチャを取得
+	// 2. Get container architecture
 	containerArch, err := getContainerArch(containerID)
 	if err != nil {
 		return containerID, "", "", "", "", false, false, 0, "", err
 	}
 
-	// 3. port-forwarderをインストール
+	// 3. Install port-forwarder
 	if !noPf {
 		err = installPortForwarder(containerID, vimInstallDir, containerArch)
 		if err != nil {
@@ -186,7 +186,7 @@ func setupContainer(
 		}
 	}
 
-	// 4. clipboard-data-receiverを起動
+	// 4. Start clipboard-data-receiver
 	pid := 0
 	port := 0
 	configDirForCdr := ""
@@ -197,7 +197,7 @@ func setupContainer(
 		}
 	}
 
-	// 5. Vimの検出とインストール
+	// 5. Detect and install Vim
 	vimFileName, useSystemVim, err := setupVim(containerID, vimInstallDir, nvim, containerArch)
 	if err != nil {
 		return containerID, vimFileName, "", "", containerArch, useSystemVim, false, pid, configDirForCdr, err
@@ -212,7 +212,7 @@ func setupContainer(
 		}
 	}
 
-	// 6. Vimファイルを転送
+	// 6. Transfer Vim files
 	sendToTCP, err := transferVimFiles(containerID, configDirForDocker, vimrc, noCdr, port, vimFileName == "nvim")
 	if err != nil {
 		return containerID, vimFileName, tmuxFileName, sendToTCP, containerArch, useSystemVim, useSystemTmux, pid, configDirForCdr, err

@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// `devcontainers up` コマンドの実行結果スキーマ
+// Execution result schema of the `devcontainers up` command
 //
 // Example: {"outcome":"success","containerId":"7278c789a975c34177e0b77d00477d5518c4fae4e66e6f0f9196561d5f895740","composeProjectName":"oasiz-mqtt-client","remoteUser":"root","remoteWorkspaceFolder":"/work"}
 type UpCommandResult struct {

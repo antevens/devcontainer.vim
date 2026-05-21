@@ -26,7 +26,7 @@ func (s DefaultInstallerUseServices) Download(downloadURL string, destPath strin
 	return download(downloadURL, destPath)
 }
 
-// ツール情報
+// Tool information
 type Tool struct {
 	FileName             string
 	CalculateDownloadURL func(containerArch string) (string, error)
@@ -34,16 +34,16 @@ type Tool struct {
 	DownloadFunc         func(downloadURL string, destPath string) error
 }
 
-// ツールのインストールを実行
+// Execute tool installation
 func (t Tool) Install(installDir string, containerArch string, override bool) (string, error) {
 
-	// tool download から直接呼ばれることもあるのでここでも正規化する
+	// Normalize here as it may be called directly from tool download
 	containerArch, err := util.NormalizeContainerArch(containerArch)
 	if err != nil {
 		return "", nil
 	}
 
-	// ツールの配置先組み立て
+	// Assemble the tool's installation destination
 	var fileName string
 	if containerArch != "" {
 		fileName = t.FileName + "_" + containerArch
@@ -64,18 +64,18 @@ func (t Tool) Install(installDir string, containerArch string, override bool) (s
 	}
 }
 
-// 単純なファイル配置でインストールが完了するもののインストール処理。
+// Installation process for tools that can be installed by simple file placement.
 //
-// downloadURL からファイルをダウンロードし、 installDir に fileName とう名前で配置する。
+// Downloads the file from downloadURL and places it in filePath.
 func simpleInstall(downloadFunc func(downloadURL string, destPath string) error, downloadURL string, filePath string) (string, error) {
 
-	// ツールのダウンロード
+	// Download tool
 	err := downloadFunc(downloadURL, filePath)
 	if err != nil {
 		return filePath, err
 	}
 
-	// 実行権限の付与
+	// Grant execution permission
 	err = util.AddExecutePermission(filePath)
 	if err != nil {
 		return filePath, err
@@ -84,7 +84,7 @@ func simpleInstall(downloadFunc func(downloadURL string, destPath string) error,
 	return filePath, nil
 }
 
-// 進捗表示用構造体
+// Structure for progress display
 type ProgressWriter struct {
 	Total   int64
 	Current int64
@@ -97,19 +97,19 @@ func (p *ProgressWriter) Write(data []byte) (int, error) {
 	percentage := float64(p.Current) / float64(p.Total) * 100.0
 	fmt.Printf("%6.2f%%", percentage)
 
-	// カーソルを 7 文字戻す
+	// Move the cursor back 7 characters
 	fmt.Printf("\033[7D")
 
 	return n, nil
 }
 
-// ファイルダウンロード処理。
+// File download process.
 //
-// downloadURL からファイルをダウンロードし、 destPath へ配置する。
+// Downloads the file from downloadURL and places it in destPath.
 func download(downloadURL string, destPath string) error {
 	fmt.Printf("Download %s from %s ...", filepath.Base(destPath), downloadURL)
 
-	// HTTP GETリクエストを送信
+	// Send HTTP GET request
 	resp, err := http.Get(downloadURL)
 	if err != nil {
 		return err
@@ -118,7 +118,7 @@ func download(downloadURL string, destPath string) error {
 
 	size := resp.ContentLength
 
-	// ファイルを作成
+	// Create file
 	out, err := os.Create(destPath)
 	if err != nil {
 		return err
@@ -129,7 +129,7 @@ func download(downloadURL string, destPath string) error {
 		Total: size,
 	}
 
-	// レスポンスの内容をファイルに書き込み
+	// Write response content to file
 	_, err = io.Copy(out, io.TeeReader(resp.Body, progress))
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func download(downloadURL string, destPath string) error {
 	return nil
 }
 
-// run サブコマンド用のツールインストール
+// Install tools for run subcommand
 func InstallRunTools(installDir string, nvim bool) (string, error) {
 	var err error
 	cdrPath, err := CDR(DefaultInstallerUseServices{}).Install(installDir, "", false)
@@ -157,7 +157,7 @@ func InstallVim(installDir string, nvim bool, containerArch string) (string, err
 		vimPath, err = VIM(DefaultInstallerUseServices{}).Install(installDir, containerArch, false)
 	} else {
 		if runtime.GOOS == "darwin" && containerArch == "amd64" {
-			// M1 Mac で amd64 のコンテナを動かすと、なぜか AppImage が動かないので vim にフォールバック
+			// fallback to vim if AppImage does not work on M1 Mac with amd64 container
 			vimPath, err = VIM(DefaultInstallerUseServices{}).Install(installDir, containerArch, false)
 		} else {
 			vimPath, err = NVIM(DefaultInstallerUseServices{}).Install(installDir, containerArch, false)
@@ -170,8 +170,8 @@ func InstallTmux(installDir string, containerArch string) (string, error) {
 	return Tmux(DefaultInstallerUseServices{}).Install(installDir, containerArch, false)
 }
 
-// start サブコマンド用のツールインストール
-// 戻り値は、 devcontainerPath, cdrPath, error
+// Install tools for start subcommand
+// Returns devcontainerPath, cdrPath, and error
 func InstallStartTools(services InstallerUseServices, installDir string) (string, string, error) {
 	var err error
 	devcontainerPath, err := DEVCONTAINER(services).Install(installDir, "", false)
@@ -185,25 +185,25 @@ func InstallStartTools(services InstallerUseServices, installDir string) (string
 	return devcontainerPath, cdrPath, nil
 }
 
-// devcontainer サブコマンド用のツールインストール
+// Install tools for devcontainer subcommand
 func InstallDevcontainerTools(installDir string) (string, error) {
 	devcontainerPath, err := DEVCONTAINER(DefaultInstallerUseServices{}).Install(installDir, "", false)
 	return devcontainerPath, err
 }
 
-// Templates サブコマンド用のツールインストール
+// Install tools for Templates subcommand
 func InstallTemplatesTools(installDir string) (string, error) {
 	devcontainerPath, err := DEVCONTAINER(DefaultInstallerUseServices{}).Install(installDir, "", false)
 	return devcontainerPath, err
 }
 
-// Stop サブコマンド用のツールインストール
+// Install tools for Stop subcommand
 func InstallStopTools(installDir string) (string, error) {
 	devcontainerPath, err := DEVCONTAINER(DefaultInstallerUseServices{}).Install(installDir, "", false)
 	return devcontainerPath, err
 }
 
-// Down サブコマンド用のツールインストール
+// Install tools for Down subcommand
 func InstallDownTools(installDir string) (string, error) {
 	devcontainerPath, err := DEVCONTAINER(DefaultInstallerUseServices{}).Install(installDir, "", false)
 	return devcontainerPath, err

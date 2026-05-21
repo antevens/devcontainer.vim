@@ -6,7 +6,7 @@ import (
 	"text/template"
 )
 
-// devcontainer/cli のツール情報
+// Tool information for devcontainer/cli
 var DEVCONTAINER = func(services InstallerUseServices) Tool {
 
 	return Tool{
@@ -23,7 +23,7 @@ var DEVCONTAINER = func(services InstallerUseServices) Tool {
 				return "", err
 			}
 
-			// GOARCH が amd64 だった場合、 x64 に変換する
+			// Convert amd64 to x64 if GOARCH is amd64
 			arch := runtime.GOARCH
 			if arch == "amd64" {
 				arch = "x64"

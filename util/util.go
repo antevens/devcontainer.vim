@@ -18,8 +18,8 @@ import (
 const binDirName = "bin"
 const configDirName = "config"
 
-// command で指定したものへパスが通っているかを確認する。
-// パスが通っている場合 true を返却し、通っていない場合 false を返却する。
+// Check if the command specified by command is in the PATH.
+// Returns true if it is in the PATH, and false otherwise.
 func IsExistsCommand(command string) bool {
 	_, err := exec.LookPath(command)
 	return err == nil
@@ -27,7 +27,7 @@ func IsExistsCommand(command string) bool {
 
 type GetDirFunc func() (string, error)
 
-// devcontainer.vim が使用するコンフィグディレクトリを作成し、返却する。
+// Create and return the configuration directory used by devcontainer.vim.
 func CreateConfigDirectory(pathFunc GetDirFunc, dirName string) (string, error) {
 	var baseDir, err = pathFunc()
 	if err != nil {
@@ -40,12 +40,13 @@ func CreateConfigDirectory(pathFunc GetDirFunc, dirName string) (string, error) 
 	return appConfigDir, nil
 }
 
-// devcontainer.vim が使用するキャッシュディレクトリを作成し、返却する。
+// Create and return the cache directory used by devcontainer.vim.
 //
-// 返却値:
-// devcontainer.vim 用のキャッシュディレクトリ
-// devcontainer.vim 用の実行バイナリ格納ディレクトリ
-// devcontainer.vim のマージ済み設定ファイル格納ディレクトリ
+// Return values:
+// 1. Cache directory for devcontainer.vim
+// 2. Binary directory for devcontainer.vim
+// 3. Configuration directory for docker
+// 4. Configuration directory for devcontainer
 func CreateCacheDirectory(pathFunc GetDirFunc, dirName string) (string, string, string, string, error) {
 	var baseDir, err = pathFunc()
 	if err != nil {
@@ -63,12 +64,12 @@ func CreateCacheDirectory(pathFunc GetDirFunc, dirName string) (string, string, 
 	if err := os.MkdirAll(configDir, 0766); err != nil {
 		return appCacheDir, binDir, "", "", err
 	}
-	// docker 用のコンフィグディレクトリ作成
+	// Create configuration directory for docker
 	var configDirForDocker = filepath.Join(baseDir, dirName, configDirName, "docker")
 	if err := os.MkdirAll(configDirForDocker, 0766); err != nil {
 		return appCacheDir, binDir, "", "", err
 	}
-	// devcontainer 用のコンフィグディレクトリ作成
+	// Create configuration directory for devcontainer
 	var configDirForDevcontainer = filepath.Join(baseDir, dirName, configDirName, "devcontainer")
 	if err := os.MkdirAll(configDirForDevcontainer, 0766); err != nil {
 		return appCacheDir, binDir, configDir, "", err
@@ -95,49 +96,49 @@ func AddExecutePermission(filePath string) error {
 	return nil
 }
 
-// baseConfigPath で指定した JSON に additionalConfigPath で指定した JSON をマージし、その結果を返却する
+// Merge the JSON specified by additionalConfigPath into the JSON specified by baseConfigPath and return the result
 func readAndMergeConfig(baseConfigPath string, additionalConfigPath string) ([]byte, error) {
 
-	// 設定ファイルを JWCC としてパースし、標準 JSON へ変換
+	// Parse the configuration file as JWCC and convert it to standard JSON
 	parsedBaseJSON, err := ParseJwcc(baseConfigPath)
 	if err != nil {
 		return nil, err
 	}
 
-	// 標準 JSON を gabs を使って再パース
+	// Re-parse the standard JSON using gabs
 	parsedBaseJSONGrabContainer, err := gabs.ParseJSON(parsedBaseJSON)
 	if err != nil {
 		return nil, err
 	}
 
-	// devcontainer.vim 用追加設定ファイル読み込み
+	// Load additional configuration file for devcontainer.vim
 	parsedAdditionalJSON, err := ParseJwcc(additionalConfigPath)
 	if err != nil {
 		return nil, err
 	}
 
-	// 標準 JSON を gabs を使って再パース
+	// Re-parse the standard JSON using gabs
 	parsedAdditionalJSONGrabContainer, err := gabs.ParseJSON(parsedAdditionalJSON)
 	if err != nil {
 		return nil, err
 	}
 
-	// gabs を使って JSON をマージ
+	// Merge JSON using gabs
 	parsedBaseJSONGrabContainer.Merge(parsedAdditionalJSONGrabContainer)
 
-	// 設定ファイルの内容を返却
+	// Return the content of the configuration file
 	return parsedBaseJSONGrabContainer.Bytes(), nil
 }
 
-// JWCC を標準 JSON に変換し、 []byte として返却
+// Convert JWCC to standard JSON and return it as []byte
 func ParseJwcc(jwccPath string) ([]byte, error) {
-	// JWCC ファイル読み込み
+	// Read JWCC file
 	jwccContentBytes, err := os.ReadFile(jwccPath)
 	if err != nil {
 		return []byte{}, err
 	}
 
-	// JWCC をパースし、標準 JSON へ変換
+	// Parse JWCC and convert it to standard JSON
 	parsedJSON, err := hujson.Parse(jwccContentBytes)
 	if err != nil {
 		return []byte{}, err
@@ -148,26 +149,26 @@ func ParseJwcc(jwccPath string) ([]byte, error) {
 	return parsedJSON.Pack(), nil
 }
 
-// configFilePath と additionalConfigFilePath の JSON をマージし、
-// devcontainer.vim のキャッシュディレクトリ内の設定ファイル格納ディレクトリへ格納する。
-// 作成した devcontainer.json を格納しているディレクトリのパスを返却する。
+// Merge configFilePath and additionalConfigFilePath JSON,
+// and store it in the configuration file storage directory within the devcontainer.vim cache directory.
+// Return the path to the directory containing the created devcontainer.json.
 func CreateConfigFileForDevcontainer(configDirForDevcontainer string, workspaceFolder string, configFilePath string, additionalConfigFilePath string) (string, error) {
 
-	// マージ要否判定して最終的に使う JSON のコンテンツを組み立てる
+	// Determine if merging is necessary and construct the final JSON content
 	var configFileContent []byte
 	var err error
 	if IsExists(additionalConfigFilePath) {
-		// JSON のマージ
+		// Merge JSON
 		configFileContent, err = readAndMergeConfig(configFilePath, additionalConfigFilePath)
 	} else {
-		// ベースの設定をそのまま使用
+		// Use base configuration as is
 		configFileContent, err = os.ReadFile(configFilePath)
 	}
 	if err != nil {
 		return "", err
 	}
 
-	// 設定管理フォルダに JSON を配置
+	// Place JSON in the configuration management folder
 	generateConfigDir, err := GetConfigDir(configDirForDevcontainer, workspaceFolder)
 	if err != nil {
 		return "", err
@@ -184,8 +185,8 @@ func CreateConfigFileForDevcontainer(configDirForDevcontainer string, workspaceF
 	return generateConfigFilePath, nil
 }
 
-// devcontainer.vim 用の devcontainer.json 格納先ディレクトリを計算して返却する。
-// `<devcontainer.vim のキャッシュディレクトリ>/config/<workspaceFolder の絶対パスを md5 播種化した文字列>` のディレクトリを返却
+// Calculate and return the storage directory for devcontainer.json for devcontainer.vim.
+// Returns the directory `<devcontainer.vim cache directory>/config/<md5 hashed absolute path of workspaceFolder>`
 func GetConfigDir(configDirForDevcontainer string, workspaceFolder string) (string, error) {
 	workspaceFolderAbs, err := filepath.Abs(workspaceFolder)
 	if err != nil {
@@ -197,13 +198,13 @@ func GetConfigDir(configDirForDevcontainer string, workspaceFolder string) (stri
 	return filepath.Join(configDirForDevcontainer, workspaceFolderHashString), nil
 }
 
-// WSL 上で動いているかを判定する
+// Determine if running on WSL
 func IsWsl() bool {
 	_, exists := os.LookupEnv("WSL_DISTRO_NAME")
 	return exists
 }
 
-// 関連付けられたアプリケーションで開く
+// Open with the associated application
 func OpenFileWithDefaultApp(filePath string) error {
 	var cmd *exec.Cmd
 
@@ -227,7 +228,7 @@ func CreateFileWithContents(file string, content string, permission fs.FileMode)
 	return nil
 }
 
-// 文字列中のシェル変数を展開して返却する
+// Expand shell variables in the string and return it
 func ExtractShellVariables(str string) (string, error) {
 	var cmd *exec.Cmd
 	if runtime.GOOS == "windows" {

@@ -10,13 +10,13 @@ import (
 
 func Pull(id string, tagName string, destDir string) error {
 
-	// リモートリポジトリの設定
+	// remote repository settings
 	src, err := remote.NewRepository(id)
 	if err != nil {
 		return err
 	}
 
-	// メモリストアの作成
+	// Create file store
 	dst, err := file.New(destDir)
 	if err != nil {
 		return err

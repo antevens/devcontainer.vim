@@ -33,7 +33,7 @@ func TestInstallStartTools(t *testing.T) {
 		t.Fatalf("Error installing start tools: %v", err)
 	}
 
-	// devcontainer の存在確認
+	// Check for devcontainer existence
 	wantDevcontainerPath := filepath.Join(binDir, "devcontainer")
 	if wantDevcontainerPath != devcontainerPath {
 		t.Fatalf("want %s, but got %s", wantDevcontainerPath, devcontainerPath)
@@ -42,7 +42,7 @@ func TestInstallStartTools(t *testing.T) {
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
-	// cdr の存在確認
+	// Check for cdr existence
 	wantCdrPath := filepath.Join(binDir, "clipboard-data-receiver")
 	if wantCdrPath != cdrPath {
 		t.Fatalf("want %s, but got %s", wantCdrPath, cdrPath)

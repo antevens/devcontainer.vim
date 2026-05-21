@@ -8,23 +8,23 @@ import (
 	"github.com/mikoto2000/devcontainer.vim/v3/util"
 )
 
-// 段階的テスト: 各分割された関数を個別にテスト
+// Step-by-step test: test each divided function individually
 func TestStartStepByStep(t *testing.T) {
-	// devcontainerコマンドの存在確認
+	// Check for existence of the docker command
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		t.Skip("docker command not found, skipping integration test")
 	}
 
-	// 1. 環境準備の検証
+	// 1. Verification of environment preparation
 	t.Run("Environment Setup", func(t *testing.T) {
 		_, _, _, _ = createTempAppDirs(t)
 
-		// 必要なファイルのダウンロード
+		// Download necessary files
 		devcontainerPath := requireTestBinary(t, "devcontainer")
 		cdrPath := requireTestBinary(t, "clipboard-data-receiver")
 
-		// バイナリが正常に配置されているか確認
+		// Check if binaries are placed correctly
 		if !util.IsExists(devcontainerPath) {
 			t.Fatalf("devcontainer binary not found: %s", devcontainerPath)
 		}
@@ -35,23 +35,23 @@ func TestStartStepByStep(t *testing.T) {
 		t.Logf("Environment setup successful: devcontainer=%s, cdr=%s", devcontainerPath, cdrPath)
 	})
 
-	// 2. 設定ファイルの作成と検証
+	// 2. Creation and verification of configuration files
 	t.Run("Config File Creation", func(t *testing.T) {
 		_, _, _, configDirForDevcontainer := createTempAppDirs(t)
 
 		devcontainerPath := requireTestBinary(t, "devcontainer")
 
-		// 設定ファイルが作成できるか確認
+		// Check if configuration files can be created
 		configFilePath, err := CreateConfigFile(devcontainerPath, "../test/project/TestStart", configDirForDevcontainer)
 		if err != nil {
-			// devcontainerコマンドが失敗する場合はスキップ
-			if strings.Contains(err.Error(), "出力パースに失敗") {
+			// Skip if devcontainer command fails
+			if strings.Contains(err.Error(), "failed to parse") {
 				t.Skip("devcontainer CLI not working properly, skipping test")
 			}
 			t.Fatalf("Error creating config file: %v", err)
 		}
 
-		// 設定ファイルが存在することを確認
+		// Confirm that the configuration file exists
 		if !util.IsExists(configFilePath) {
 			t.Fatalf("Config file not created: %s", configFilePath)
 		}
@@ -59,10 +59,10 @@ func TestStartStepByStep(t *testing.T) {
 		t.Logf("Config file created successfully: %s", configFilePath)
 	})
 
-	// 3. 分割された関数の個別テスト（モック）
+	// 3. Individual tests for divided functions (mock)
 	t.Run("Individual Functions", func(t *testing.T) {
 		t.Run("startDevcontainer parameters", func(t *testing.T) {
-			// パラメータ検証のみ
+			// Parameter verification only
 			args := []string{"../test/project/TestStart"}
 			devcontainerPath := "/mock/devcontainer"
 			configFilePath := "/mock/config.json"
@@ -96,9 +96,9 @@ func TestStartStepByStep(t *testing.T) {
 	})
 }
 
-// 軽量版統合テスト：実際のdevcontainerを使わない
+// Lightweight integration test: without using actual devcontainer
 func TestStartLightweight(t *testing.T) {
-	// テスト用モックサービス
+	// Mock service for testing
 	type MockDevcontainerStartService struct {
 		shouldFail bool
 		errorMsg   string
@@ -106,11 +106,11 @@ func TestStartLightweight(t *testing.T) {
 
 	mockService := MockDevcontainerStartService{shouldFail: false}
 
-	// Start関数の呼び出し可能性をテスト
+	// Test callability of Start function
 	args := []string{"test-workspace"}
 	nvim := false
 
-	// パラメータの妥当性検証
+	// Validation of parameter validity
 	if len(args) == 0 {
 		t.Fatal("args should not be empty")
 	}
@@ -120,60 +120,60 @@ func TestStartLightweight(t *testing.T) {
 		t.Fatal("workspaceFolder should not be empty")
 	}
 
-	// モックサービスの検証
+	// Verification of mock services
 	_ = mockService
 
 	t.Logf("Start function parameters validated: workspace=%s, nvim=%v", workspaceFolder, nvim)
 }
 
-// 条件付き統合テスト：環境が整っている場合のみ実行
+// Conditional integration test: execute only when the environment is ready
 func TestStartConditional(t *testing.T) {
-	// 統合テスト実行の前提条件をチェック
+	// Check prerequisites for integration test execution
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	// Dockerの存在確認
+	// Check for Docker existence
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		t.Skip("docker command not found, skipping integration test")
 	}
 
-	// devcontainerバイナリの確認
+	// Check for devcontainer binary
 	_, _, _, _ = createTempAppDirs(t)
 
 	devcontainerPath := requireTestBinary(t, "devcontainer")
 
-	// devcontainerコマンドが動作するかテスト
+	// Test if devcontainer command works
 	testCmd := exec.Command(devcontainerPath, "--version")
 	err = testCmd.Run()
 	if err != nil {
 		t.Skipf("devcontainer CLI not working: %v", err)
 	}
 
-	// ここで実際の統合テストを実行
+	// Execute the actual integration test here
 	t.Logf("All prerequisites met, devcontainer integration test would run here")
-	// 実際のStart関数呼び出しは環境が整った場合のみ
+	// Actual Start function call only when the environment is ready
 }
 
-// エラーケーステスト
+// Error case tests
 func TestStartErrorCases(t *testing.T) {
 	t.Run("Empty args", func(t *testing.T) {
-		// 空の引数でのテスト - panicを期待しない適切なエラーハンドリング
-		args := []string{} // 空の配列
+		// Test with empty arguments - appropriate error handling without expecting panic
+		args := []string{} // Empty array
 		if len(args) > 0 {
 			workspaceFolder := args[len(args)-1]
 			_ = workspaceFolder
 			t.Error("Should not reach here with empty args")
 		} else {
-			// 空の引数の場合のエラーハンドリングをテスト
+			// Test error handling for empty arguments
 			t.Log("Empty args handled correctly")
 		}
-		// テスト成功 - panicせずに適切にハンドリングされた
+		// Test successful - handled appropriately without panic
 	})
 
 	t.Run("Single arg", func(t *testing.T) {
-		// 引数が1つの場合のテスト
+		// Test with a single argument
 		args := []string{"workspace"}
 		if len(args) > 0 {
 			workspaceFolder := args[len(args)-1]
@@ -185,7 +185,7 @@ func TestStartErrorCases(t *testing.T) {
 	})
 
 	t.Run("Multiple args", func(t *testing.T) {
-		// 複数引数の場合のテスト
+		// Test with multiple arguments
 		args := []string{"arg1", "arg2", "workspace"}
 		if len(args) > 0 {
 			workspaceFolder := args[len(args)-1]
@@ -197,7 +197,7 @@ func TestStartErrorCases(t *testing.T) {
 	})
 
 	t.Run("Invalid paths", func(t *testing.T) {
-		// 無効なパスでのテスト
+		// Test with invalid paths
 		invalidPaths := []string{
 			"",
 			"/nonexistent/path",
@@ -206,7 +206,7 @@ func TestStartErrorCases(t *testing.T) {
 
 		for _, path := range invalidPaths {
 			t.Logf("Testing invalid path: %s", path)
-			// パスの妥当性検証ロジックをテスト
+			// Test path validity verification logic
 			if path == "" {
 				t.Logf("Empty path detected correctly")
 			}

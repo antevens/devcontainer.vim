@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// `docker compose ps --format json` コマンドの実行結果スキーマ
+// Execution result schema of the `docker compose ps --format json` command
 //
 // Example:
 //

@@ -15,12 +15,12 @@ func (s TestDevcontainerStartUseService) StartVim(containerID string, devcontain
 }
 
 func TestStart(t *testing.T) {
-	// 統合テストの前提条件をチェック
+	// Check prerequisites for integration test
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	// Dockerの存在確認
+	// Check for Docker existence
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		t.Skip("docker command not found, skipping integration test")
@@ -28,24 +28,24 @@ func TestStart(t *testing.T) {
 
 	_, binDir, _, configDirForDevcontainer := createTempAppDirs(t)
 
-	// 必要なファイルのダウンロード
+	// Download necessary files
 	nvim := false
 	devcontainerPath := requireTestBinary(t, "devcontainer")
 	cdrPath := requireTestBinary(t, "clipboard-data-receiver")
 
-	// devcontainerコマンドが動作するかテスト
+	// Test if devcontainer command works
 	testCmd := exec.Command(devcontainerPath, "--version")
 	err = testCmd.Run()
 	if err != nil {
 		t.Skipf("devcontainer CLI not working: %v", err)
 	}
 
-	// コマンドライン引数の末尾は `--workspace-folder` の値として使う
+	// Use the end of the command line arguments as the value for --workspace-folder
 	configFilePath, err := CreateConfigFile(devcontainerPath, "../test/project/TestStart", configDirForDevcontainer)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			t.Skipf("Configuration file not found: %v", err)
-		} else if strings.Contains(err.Error(), "出力パースに失敗") {
+		} else if strings.Contains(err.Error(), "failed to parse") {
 			t.Skipf("devcontainer CLI parse error (environment issue): %v", err)
 		} else {
 			t.Fatalf("Error creating config file: %v", err)
@@ -54,7 +54,7 @@ func TestStart(t *testing.T) {
 
 	args := []string{"../test/project/TestStart"}
 
-	// devcontainer を用いたコンテナ立ち上げ
+	// Start the container using devcontainer
 	noCdr := false
 	noPf := false
 	err = Start(TestDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, false, cdrPath, binDir, nvim, "", configFilePath, "../test/resource/TestStart/vimrc")
@@ -68,12 +68,12 @@ func TestStart(t *testing.T) {
 		}
 	}
 
-	// 後片付け
+	// Cleanup
 	defer Down([]string{"../test/project/TestStart"}, devcontainerPath, configDirForDevcontainer)
 
-	// json マージ後の設定でコンテナが起動するか？
-	// 起動したコンテナに所望のファイルが転送されているか？
-	//     ストレージのマウントがされるか
+	// Does the container start with the settings after JSON merging?
+	// Are the desired files transferred to the started container?
+	//     Is the storage mounted?
 	vimfilesOutput, err := Execute(devcontainerPath, "exec", "--workspace-folder", "../test/project/TestStart", "sh", "-c", "ls -d ~/.vim")
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -82,8 +82,8 @@ func TestStart(t *testing.T) {
 	if !strings.Contains(vimfilesOutput, vimfilesWant) {
 		t.Fatalf("error: want match %s, but got %s", vimfilesWant, vimfilesOutput)
 	}
-	//     portForward がされるか
-	//     TODO: なぜかテストでは生えてこない...
+	//     Is port forwarding performed?
+	//     TODO: For some reason it doesn't appear in the test...
 	//pfOutput, err := Execute(devcontainerPath, "exec", "--workspace-folder", "../test/project/TestStart", "sh", "-c", "ls /pf")
 	//if err != nil {
 	//	t.Fatalf("error: %s", err)
@@ -93,7 +93,7 @@ func TestStart(t *testing.T) {
 	//	t.Fatalf("error: want match %s, but got %s", pfWant, pfOutput)
 	//}
 
-	//     環境変数が設定されるか
+	//     Are environment variables set?
 	termOutput, err := Execute(devcontainerPath, "exec", "--workspace-folder", "../test/project/TestStart", "sh", "-c", "\"env\"")
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -132,21 +132,21 @@ func TestStart(t *testing.T) {
 }
 
 func TestStartWithDockerCompose(t *testing.T) {
-	// TODO: chdir しなくても成功するように修正
+	// TODO: Fix to succeed without chdir
 	os.Chdir("../test/project/TestStartWithDockerCompose")
 	_, binDir, _, configDirForDevcontainer := createTempAppDirs(t)
 
-	// 必要なファイルのダウンロード
+	// Download necessary files
 	nvim := false
 	devcontainerPath := requireTestBinary(t, "devcontainer")
 	cdrPath := requireTestBinary(t, "clipboard-data-receiver")
 
-	// コマンドライン引数の末尾は `--workspace-folder` の値として使う
+	// Use the end of the command line arguments as the value for --workspace-folder
 	configFilePath, err := CreateConfigFile(devcontainerPath, ".", configDirForDevcontainer)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			t.Skipf("Configuration file not found: %v", err)
-		} else if strings.Contains(err.Error(), "出力パースに失敗") {
+		} else if strings.Contains(err.Error(), "failed to parse") {
 			t.Skipf("devcontainer CLI parse error (environment issue): %v", err)
 		} else {
 			t.Fatalf("Error creating config file: %v", err)
@@ -155,7 +155,7 @@ func TestStartWithDockerCompose(t *testing.T) {
 
 	args := []string{"."}
 
-	// devcontainer を用いたコンテナ立ち上げ
+	// Start the container using devcontainer
 	noCdr := false
 	noPf := false
 	err = Start(TestDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, false, cdrPath, binDir, nvim, "", configFilePath, "../../resource/TestStartWithDockerCompose/vimrc")
@@ -169,12 +169,12 @@ func TestStartWithDockerCompose(t *testing.T) {
 		}
 	}
 
-	// 後片付け
+	// Cleanup
 	defer Down([]string{"."}, devcontainerPath, configDirForDevcontainer)
 
-	// json マージ後の設定でコンテナが起動するか？
-	// 起動したコンテナに所望のファイルが転送されているか？
-	//     ストレージのマウントがされるか
+	// Does the container start with the settings after JSON merging?
+	// Are the desired files transferred to the started container?
+	//     Is the storage mounted?
 	vimfilesOutput, err := Execute(devcontainerPath, "exec", "--workspace-folder", ".", "sh", "-c", "ls -d ~/.vim")
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -184,7 +184,7 @@ func TestStartWithDockerCompose(t *testing.T) {
 		t.Fatalf("error: want match %s, but got %s", vimfilesWant, vimfilesOutput)
 	}
 
-	//     環境変数が設定されるか
+	//     Are environment variables set?
 	termOutput, err := Execute(devcontainerPath, "exec", "--workspace-folder", ".", "sh", "-c", "\"env\"")
 	if err != nil {
 		t.Fatalf("error: %s", err)

@@ -13,7 +13,7 @@ import (
 	"github.com/mikoto2000/devcontainer.vim/v3/util"
 )
 
-// コンテナのアーキテクチャを取得する
+// Get container architecture
 func getContainerArch(containerID string) (string, error) {
 	containerArch, err := docker.Exec(containerID, "uname", "-m")
 	if err != nil {
@@ -28,7 +28,7 @@ func getContainerArch(containerID string) (string, error) {
 	return containerArch, nil
 }
 
-// port-forwarderをコンテナにインストールする
+// Install port-forwarder in the container
 func installPortForwarder(containerID, vimInstallDir, containerArch string) error {
 	portForwarderContainerPath, err := tools.PortForwarderContainer(tools.DefaultInstallerUseServices{}).Install(vimInstallDir, containerArch, false)
 	if err != nil {
@@ -41,7 +41,7 @@ func installPortForwarder(containerID, vimInstallDir, containerArch string) erro
 	return nil
 }
 
-// tmuxの検出とインストールを行う
+// Detect and install tmux
 func setupTmux(containerID, vimInstallDir string, containerArch string) (string, bool, error) {
 	useSystemTmux := false
 	fmt.Printf("Check system installed tmux ... ")
@@ -81,7 +81,7 @@ func setupTmux(containerID, vimInstallDir string, containerArch string) (string,
 	return "tmux", false, nil
 }
 
-// Vimの検出とインストールを行う
+// Detect and install Vim
 func setupVim(containerID, vimInstallDir string, nvim bool, containerArch string) (string, bool, error) {
 	vimFileName := "vim"
 	if nvim {
@@ -102,11 +102,11 @@ func setupVim(containerID, vimInstallDir string, nvim bool, containerArch string
 		fmt.Printf("not found.\n")
 
 		if runtime.GOARCH == "arm64" {
-			// arm の場合スタティックリンクの nvim を作れないため、 vim にフォールバック
+			// Fallback to vim because static-linked nvim cannot be built for arm
 			vimFileName = "vim"
 			nvim = false
 		} else if runtime.GOOS == "darwin" && runtime.GOARCH == "amd64" && nvim {
-			// M1 Mac で amd64 のコンテナを動かすと、なぜか AppImage が動かないので vim にフォールバック
+			// Fallback to vim because AppImage does not work on M1 Mac with amd64 container for some reason
 			vimFileName = "vim"
 			nvim = false
 		}
@@ -114,16 +114,16 @@ func setupVim(containerID, vimInstallDir string, nvim bool, containerArch string
 	fmt.Printf("docker exec output: \"%s\".\n", strings.TrimSpace(out))
 
 	if !useSystemVim {
-		// コンテナへ Vim/Neovim を転送して実行権限を追加
+		// Transfer Vim/Neovim to the container and add execution permission
 		vimFilePath, err := tools.InstallVim(vimInstallDir, nvim, containerArch)
 		if err != nil {
 			return "", false, err
 		}
 
-		// start.goとrun.goで異なる処理: start.goは特別なパス解析が必要
+		// Different processing for start.go and run.go: start.go requires special path analysis
 		actualVimFileName := vimFileName
 		if strings.Contains(vimFilePath, "_") {
-			// vim_<ARCH>, nvim_<ARCH> の形式でパスがわたってくる場合（start.go）
+			// Case where the path comes in the format vim_<ARCH>, nvim_<ARCH> (start.go)
 			actualVimFileName = strings.Split(filepath.Base(vimFilePath), "_")[0]
 		}
 
@@ -132,7 +132,7 @@ func setupVim(containerID, vimInstallDir string, nvim bool, containerArch string
 			return actualVimFileName, useSystemVim, err
 		}
 
-		// `docker exec <dockerrun 時に標準出力に表示される CONTAINER ID> chmod +x /Vim-AppImage`
+		// `docker exec <CONTAINER ID displayed on stdout during dockerrun> chmod +x /Vim-AppImage`
 		dockerChownArgs := []string{"exec", "--user", "root", containerID, "sh", "-c", "chmod +x /" + actualVimFileName}
 		fmt.Printf("Chown AppImage: `%s \"%s\"` ...", containerCommand, strings.Join(dockerChownArgs, "\" \""))
 		chmodResult, err := exec.Command(containerCommand, dockerChownArgs...).CombinedOutput()
@@ -149,21 +149,21 @@ func setupVim(containerID, vimInstallDir string, nvim bool, containerArch string
 	return vimFileName, useSystemVim, nil
 }
 
-// Vimファイル（SendToTcp.vimとvimrc）をコンテナに転送する
+// Transfer Vim files (SendToTcp.vim and vimrc) to the container
 func transferVimFiles(containerID, configDir, vimrc string, noCdr bool, port int, isNvim bool) (string, error) {
-	// Vim 関連ファイルの転送(`SendToTcp.vim` と、追加の `vimrc`)
+	// Transfer Vim-related files (SendToTcp.vim and additional vimrc)
 	sendToTCP, err := tools.CreateSendToTCP(configDir, port, noCdr, isNvim)
 	if err != nil {
 		return "", err
 	}
 
-	// コンテナへ SendToTcp.vim を転送
+	// Transfer SendToTcp.vim to the container
 	err = docker.Cp("SendToTcp.vim", sendToTCP, containerID, "/")
 	if err != nil {
 		return sendToTCP, err
 	}
 
-	// コンテナへ vimrc を転送
+	// Transfer vimrc to the container
 	err = docker.Cp("vimrc", vimrc, containerID, "/")
 	if err != nil {
 		return sendToTCP, err

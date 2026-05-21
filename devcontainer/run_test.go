@@ -13,7 +13,7 @@ import (
 	"github.com/mikoto2000/devcontainer.vim/v3/tools"
 )
 
-// setupContainer関数のテスト（既存のテストを継続使用）
+// Test for setupContainer function (continue using existing test)
 func TestSetupContainer(t *testing.T) {
 	_, binDir, configDirForDocker, _ := createTempAppDirs(t)
 
@@ -44,10 +44,10 @@ func TestSetupContainer(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	// 後片付け
-	// コンテナ停止
+	// Cleanup
+	// Stop container
 	defer func() {
-		// `docker stop <dockerrun 時に標準出力に表示される CONTAINER ID>`
+		// `docker stop <CONTAINER ID displayed on stdout during dockerrun>`
 		fmt.Printf("Stop container(Async) %s.\n", containerID)
 		err = exec.Command(containerCommand, "stop", containerID).Start()
 		if err != nil {
@@ -75,9 +75,9 @@ func TestSetupContainer(t *testing.T) {
 	}
 }
 
-// startContainer関数の単体テスト
+// Unit test for startContainer function
 func TestStartContainer(t *testing.T) {
-	// Dockerの存在確認
+	// Check for Docker existence
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		t.Skip("docker command not found, skipping test")
@@ -88,24 +88,24 @@ func TestStartContainer(t *testing.T) {
 
 	containerID, err := startContainer(args, defaultRunargs)
 	if err != nil {
-		// Dockerデーモンが動いていない場合はスキップ
+		// Skip if Docker daemon is not running
 		if strings.Contains(err.Error(), "Cannot connect to the Docker daemon") || strings.Contains(err.Error(), "Container start error") {
 			t.Skip("Docker daemon not running, skipping test")
 		}
 		t.Fatalf("startContainer failed: %v", err)
 	}
 
-	// コンテナIDが返されることを確認
+	// Confirm that the container ID is returned
 	if containerID == "" {
 		t.Fatal("Container ID should not be empty")
 	}
 
-	// 後片付け
+	// Cleanup
 	defer func() {
 		exec.Command(containerCommand, "stop", containerID).Start()
 	}()
 
-	// コンテナが実際に起動していることを確認
+	// Confirm that the container is actually running
 	psOutput, err := docker.Ps("id=" + containerID)
 	if err != nil {
 		t.Fatalf("Failed to check container status: %v", err)
@@ -116,15 +116,15 @@ func TestStartContainer(t *testing.T) {
 	}
 }
 
-// getContainerArch関数の単体テスト
+// Unit test for getContainerArch function
 func TestGetContainerArch(t *testing.T) {
-	// Dockerの存在確認
+	// Check for Docker existence
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		t.Skip("docker command not found, skipping test")
 	}
 
-	// テスト用コンテナを起動
+	// Start test container
 	args := []string{"alpine:latest"}
 	containerID, err := startContainer(args, []string{})
 	if err != nil {
@@ -138,13 +138,13 @@ func TestGetContainerArch(t *testing.T) {
 		exec.Command(containerCommand, "stop", containerID).Start()
 	}()
 
-	// アーキテクチャを取得
+	// Get architecture
 	arch, err := getContainerArch(containerID)
 	if err != nil {
 		t.Fatalf("getContainerArch failed: %v", err)
 	}
 
-	// 有効なアーキテクチャが返されることを確認
+	// Confirm that a valid architecture is returned
 	validArchs := []string{"amd64", "arm64", "x86_64", "aarch64"}
 	found := false
 	for _, validArch := range validArchs {
@@ -159,15 +159,15 @@ func TestGetContainerArch(t *testing.T) {
 	}
 }
 
-// setupVim関数の単体テスト（システムVimが存在する場合）
+// Unit test for setupVim function (when system Vim exists)
 func TestSetupVimWithSystemVim(t *testing.T) {
-	// Dockerの存在確認
+	// Check for Docker existence
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		t.Skip("docker command not found, skipping test")
 	}
 
-	// テスト用コンテナを起動（Vimがプリインストールされているイメージを使用）
+	// Start test container (using an image with Vim pre-installed)
 	args := []string{"alpine:latest"}
 	containerID, err := startContainer(args, []string{})
 	if err != nil {
@@ -181,43 +181,43 @@ func TestSetupVimWithSystemVim(t *testing.T) {
 		exec.Command(containerCommand, "stop", containerID).Start()
 	}()
 
-	// Vimがシステムにインストールされているかどうかをテスト
+	// Test whether Vim is installed on the system
 	vimFileName, useSystemVim, err := setupVim(containerID, "", false, "amd64")
 	if err != nil {
 		t.Fatalf("setupVim failed: %v", err)
 	}
 
-	// 結果の検証
+	// Verification of results
 	if vimFileName != "vim" && vimFileName != "nvim" {
 		t.Fatalf("Unexpected vim filename: %s", vimFileName)
 	}
 
-	// useSystemVimの値が妥当であることを確認
+	// Confirm that the value of useSystemVim is valid
 	t.Logf("useSystemVim: %v, vimFileName: %s", useSystemVim, vimFileName)
 }
 
-// Run関数の統合テスト（モック使用）
+// Integration test for Run function (using mock)
 func TestRunWithMock(t *testing.T) {
-	// このテストは実際のDockerコンテナを使用しないモックテスト
-	// Run関数の構造をテストするが、実際のVim実行はスキップ
+	// This test is a mock test that does not use actual Docker containers
+	// Test the structure of the Run function, but skip actual Vim execution
 
-	// テスト用の一時ディレクトリを作成
+	// Create temporary directory for testing
 	tempDir, err := os.MkdirTemp("", "devcontainer_run_test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// モック用のパラメータ
+	// Parameters for mock
 	args := []string{"test-image"}
 	nvim := false
 	configDirForDocker := tempDir
 
-	// Run関数は実際のDockerコンテナが必要なため、
-	// ここでは関数の呼び出し可能性のみをテスト
-	// 実際の実行は統合テスト環境で行う
+	// Since the Run function requires an actual Docker container,
+	// only the callability of the function is tested here
+	// Actual execution is performed in the integration test environment
 
-	// パラメータの妥当性をテスト
+	// Test parameter validity
 	if len(args) == 0 {
 		t.Fatal("args should not be empty")
 	}
@@ -229,14 +229,14 @@ func TestRunWithMock(t *testing.T) {
 	t.Logf("Run function parameters validated: args=%v, nvim=%v", args, nvim)
 }
 
-// Run関数の統合テスト（実際のコンテナ使用）
+// Integration test for Run function (using actual container)
 func TestRunIntegration(t *testing.T) {
-	// 長時間実行されるテストなので、短いタイムアウトでスキップも可能
+	// Since this is a long-running test, it can be skipped with a short timeout
 	if testing.Short() {
 		t.Skip("skipping integration test in short mode")
 	}
 
-	// Dockerの存在確認
+	// Check for Docker existence
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		t.Skip("docker command not found, skipping integration test")
@@ -253,16 +253,16 @@ func TestRunIntegration(t *testing.T) {
 	noCdr := false
 	noPf := false
 
-	// Run関数を別のgoroutineで実行し、タイムアウトを設定
+	// Execute the Run function in a separate goroutine and set a timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
 	done := make(chan error, 1)
 	go func() {
-		// Run関数は通常、ユーザーの入力を待つため、即座に終了させる
-		// 実際のテストでは、コンテナが起動してVimが実行可能な状態になることを確認
+		// Since the Run function normally waits for user input, terminate it immediately
+		// In actual tests, confirm that the container starts and Vim is in an executable state
 
-		// setupContainer部分のみをテスト
+		// Test only the setupContainer part
 		containerID, _, _, _, _, _, _, cdrPid, cdrConfigDir, err := setupContainer(
 			args,
 			noCdr,
@@ -280,7 +280,7 @@ func TestRunIntegration(t *testing.T) {
 			return
 		}
 
-		// クリーンアップ
+		// Cleanup
 		tools.KillCdr(cdrPid)
 		os.RemoveAll(cdrConfigDir)
 		exec.Command(containerCommand, "stop", containerID).Start()

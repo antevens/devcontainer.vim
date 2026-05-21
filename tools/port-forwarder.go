@@ -9,7 +9,7 @@ import (
 const downloadURLPortForwarderContainerAmd64Pattern = "https://github.com/mikoto2000/port-forwarder/releases/download/{{ .TagName }}/port-forwarder-linux-amd64"
 const downloadURLPortForwarderContainerArm64Pattern = "https://github.com/mikoto2000/port-forwarder/releases/download/{{ .TagName }}/port-forwarder-linux-arm64"
 
-// コンテナ上で起動する port-forwarder のツール情報
+// Tool information for port-forwarder running on the container
 var PortForwarderContainer = func(services InstallerUseServices) Tool {
 
 	return Tool{

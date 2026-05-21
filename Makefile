@@ -43,9 +43,9 @@ WATCH_SRC := ./main.go \
 						 ./util/port-forwarder.go \
 						 ./util/util.go
 
-### 開発関連
-# 開発環境の都合で、個別にビルドできるようにしている
-# (Linux コンテナ上でコーディングを行い、 Windows 上で実行することがあるため)
+### Development
+# Building individually for development convenience
+# (Since coding is done on a Linux container and execution may be on Windows)
 all: build
 build: build/devcontainer.vim
 build/devcontainer.vim: ${WATCH_SRC}
@@ -77,9 +77,8 @@ clean:
 	rm -rf build
 
 
-### テスト関連
+### Test
 .PHONY: test
 test:
 	go test -cover ./... -coverprofile=cover.out
 	go tool cover -html=cover.out -o cover.html
-

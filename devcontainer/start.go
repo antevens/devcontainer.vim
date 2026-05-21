@@ -31,9 +31,9 @@ func (s DefaultDevcontainerStartUseService) StartVim(containerID string, devcont
 
 var devcontainreArgsPrefix = []string{"up"}
 
-// devcontainer up でコンテナを起動し、コンテナIDを返す
+// Start the container with `devcontainer up` and return the container ID
 func startDevcontainer(devcontainerPath string, args []string, configFilePath string, workspaceFolder string) (string, error) {
-	// 末尾以外のものはそのまま `devcontainer up` への引数として渡す
+	// Pass all arguments except the last one as they are to `devcontainer up`
 	userArgs := args[0 : len(args)-1]
 	userArgs = append(userArgs, "--override-config", configFilePath, "--workspace-folder", workspaceFolder)
 	devcontainerArgs := append(devcontainreArgsPrefix, userArgs...)
@@ -59,7 +59,7 @@ func startDevcontainer(devcontainerPath string, args []string, configFilePath st
 	return containerID, nil
 }
 
-// devcontainer用のclipboard-data-receiverを起動する
+// Start clipboard-data-receiver for devcontainer
 func startClipboardReceiverForDevcontainer(cdrPath, configDirForDevcontainer string) (int, int, error) {
 	pid, port, err := tools.RunCdr(cdrPath, configDirForDevcontainer)
 	if err != nil {
@@ -96,7 +96,7 @@ func listPortForwarderMarkers(containerID string) ([]string, error) {
 func startPortForwarders(ctx context.Context, containerID, containerIp, devcontainerPath, workspaceFolder string) error {
 	fmt.Println("Start port-forwarder in container.")
 
-	// forwardPorts を解釈
+	// Parse forwardPorts
 	configurationString, err := ReadConfiguration(devcontainerPath, "--workspace-folder", workspaceFolder)
 	if err != nil {
 		return err
@@ -106,10 +106,10 @@ func startPortForwarders(ctx context.Context, containerID, containerIp, devconta
 		return err
 	}
 
-	// 解釈した forwardPort ごとに port-forwarder を起動する
+	// Start port-forwarder for each parsed forwardPort
 	for _, fc := range forwardConfigs {
 
-		// コンテナ側の port-forwarder の起動
+		// Start port-forwarder on the container side
 		fmt.Printf("%s %s %s %s %s %s %s.\n", devcontainerPath, "exec", "--workspace-folder", ".", "sh", "-c", "/port-forwarder -l 0.0.0.0:0 -f "+fc.Host+":"+fc.Port)
 		dockerExecPortForwarder := exec.CommandContext(ctx, devcontainerPath, "exec", "--workspace-folder", ".", "sh", "-c", "/port-forwarder -l 0.0.0.0:0 -f "+fc.Host+":"+fc.Port)
 		portOut, err := dockerExecPortForwarder.StdoutPipe()
@@ -140,7 +140,7 @@ func startPortForwarders(ctx context.Context, containerID, containerIp, devconta
 				port = strings.TrimSpace(port)
 				fmt.Printf("port-forwarder started: %s:%s %s\n", containerIp, port, host+":"+containerPort)
 
-				// forwardPorts の内容を `~/.config/devcontainer.vim/pf` ディテク取りに「<転送先>_<リッスンアドレス＆ポート>」の形式で配置する
+				// Place the content of forwardPorts in `~/.config/devcontainer.vim/pf` directory in the format "<destination>_<listen address & port>"
 				_, err = docker.Exec(containerID, "sh", "-c", "mkdir -p "+portForwarderMarkerDir+" && touch "+portForwarderMarkerDir+"/"+host+":"+containerPort+"_"+containerIp+":"+port)
 				if err != nil {
 					fmt.Fprintf(os.Stderr, "Error creating port-forwarder marker file: %v\n", err)
@@ -191,12 +191,12 @@ func parsePortForwarderMarker(forwardConfig string) (string, string, error) {
 	return scs[1], scd[1], nil
 }
 
-// port-forwardingの設定を行う
+// Configure port forwarding
 func setupPortForwarding(ctx context.Context, containerID, devcontainerPath, workspaceFolder string) error {
-	// コンテナの IP アドレスを取得
+	// Get container IP address
 	containerIp, err := docker.Exec(containerID, "sh", "-c", "hostname -i")
 	if err != nil {
-		return errors.New("コンテナ上での hostname 実行に失敗しました。コンテナに hostname コマンドがインストールされている必要があります")
+		return errors.New("failed to execute hostname on the container. The hostname command must be installed in the container")
 	}
 	containerIp = strings.TrimSpace(containerIp)
 
@@ -224,8 +224,8 @@ func setupPortForwarding(ctx context.Context, containerID, devcontainerPath, wor
 	return nil
 }
 
-// devcontainer でコンテナを立ち上げ、 Vim を転送し、実行する。
-// 既存実装の都合上、configFilePath から configDirForDevcontainer を抽出している
+// Start the container with devcontainer, transfer Vim, and execute.
+// For historical reasons, configDirForDevcontainer is extracted from configFilePath
 func Start(
 	services DevcontainerStartUseService,
 	args []string,
@@ -240,28 +240,28 @@ func Start(
 	configFilePath string,
 	vimrc string) error {
 
-	// コマンドライン引数の末尾は `--workspace-folder` の値として使う
+	// Use the end of the command line arguments as the value for --workspace-folder
 	workspaceFolder := args[len(args)-1]
 
-	// 1. devcontainer up でコンテナを起動
+	// 1. Start the container with `devcontainer up`
 	containerID, err := startDevcontainer(devcontainerPath, args, configFilePath, workspaceFolder)
 	if err != nil {
 		return err
 	}
 
-	// 2. コンテナアーキテクチャを取得
+	// 2. Get container architecture
 	containerArch, err := getContainerArch(containerID)
 	if err != nil {
 		return err
 	}
 
-	// 3. port-forwarderをインストール
+	// 3. Install port-forwarder
 	err = installPortForwarder(containerID, vimInstallDir, containerArch)
 	if err != nil {
 		return err
 	}
 
-	// 4. clipboard-data-receiverを起動
+	// 4. Start clipboard-data-receiver
 	port := 0
 	configDirForDevcontainer := filepath.Dir(configFilePath)
 	if !noCdr {
@@ -271,7 +271,7 @@ func Start(
 		}
 	}
 
-	// 5. port-forwardingの設定
+	// 5. Configure port forwarding
 	var pfCancel context.CancelFunc
 	if !noPf {
 		var pfCtx context.Context
@@ -282,7 +282,7 @@ func Start(
 		}
 	}
 
-	// 6. Vimの検出とインストール
+	// 6. Detect and install Vim
 	vimFileName, useSystemVim, err := setupVim(containerID, vimInstallDir, nvim, containerArch)
 	if err != nil {
 		return err
@@ -297,13 +297,13 @@ func Start(
 		}
 	}
 
-	// 7. Vimファイルの転送
+	// 7. Transfer Vim files
 	sendToTCP, err := transferVimFiles(containerID, configDirForDevcontainer, vimrc, noCdr, port, vimFileName == "nvim")
 	if err != nil {
 		return err
 	}
 
-	// 8. コンテナへ接続
+	// 8. Connect to the container
 	err = services.StartVim(containerID, devcontainerPath, workspaceFolder, vimFileName, tmuxFileName, sendToTCP, containerArch, useSystemVim, useSystemTmux, noTmux, shell, configDirForDevcontainer)
 	if pfCancel != nil {
 		pfCancel()
@@ -312,12 +312,12 @@ func Start(
 		return err
 	}
 
-	// コンテナ停止は別途 down コマンドで行う
+	// Container stop is performed separately by the down command
 	return nil
 }
 
-// コンテナへ接続
-// `docker exec <dockerrun 時に標準出力に表示される CONTAINER ID> /Vim-AppImage`
+// Connect to the container
+// `docker exec <CONTAINER ID displayed on stdout during dockerrun> /Vim-AppImage`
 func startVim(containerID string, devcontainerPath string, workspaceFolder string, vimFileName string, tmuxFileName string, sendToTCP string, containerArch string, useSystemVim bool, useSystemTmux bool, noTmux bool, shell string, configFilePathForDevcontainer string) error {
 	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
 	defer cancel()

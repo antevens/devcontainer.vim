@@ -9,7 +9,7 @@ import (
 )
 
 /**
- * ユーザー名、リポジトリ名から最新リリースタグ名を返却する。
+ * Returns the latest release tag name from the owner and repository name.
  */
 func GetLatestReleaseFromGitHub(owner string, repository string) (string, error) {
 	ctx := context.Background()

@@ -18,10 +18,10 @@ func (e *ContainerNotFoundError) Error() string {
 	return e.msg
 }
 
-// workspaceFolder で指定したディレクトリに対応するコンテナのコンテナ ID を返却する
+// Returns the container ID corresponding to the directory specified by workspaceFolder.
 func GetContainerIDFromWorkspaceFolder(workspaceFolder string) (string, error) {
 
-	// `devcontainer.local_folder=${workspaceFolder}` が含まれている行を探す
+	// Search for the line containing `devcontainer.local_folder=${workspaceFolder}`
 
 	workspaceFilderAbs, err := filepath.Abs(workspaceFolder)
 	if err != nil {
@@ -44,7 +44,7 @@ func GetContainerIDFromWorkspaceFolder(workspaceFolder string) (string, error) {
 	return id, nil
 }
 
-// `docker exec` コマンドを実行する。
+// Executes the `docker exec` command.
 func Exec(containerID string, command ...string) (string, error) {
 
 	dockerExecArgs := []string{"exec", "-t", containerID}
@@ -55,7 +55,7 @@ func Exec(containerID string, command ...string) (string, error) {
 	return string(stdout), err
 }
 
-// `docker ps --format json` コマンドを実行する。
+// Executes the `docker ps --format json` command.
 func Ps(filter string) (string, error) {
 	args := []string{"ps", "--format", "json"}
 	if filter != "" {
@@ -66,14 +66,14 @@ func Ps(filter string) (string, error) {
 	return string(stdout), err
 }
 
-// `docker stop -f ${containerID}` コマンドを実行する。
+// Executes the `docker stop ${containerID}` command.
 func Stop(containerID string) error {
 	dockerStopCommand := exec.Command(containerCommand, "stop", containerID)
 	err := dockerStopCommand.Start()
 	return err
 }
 
-// `docker rm -f ${containerID}` コマンドを実行する。
+// Executes the `docker rm -f ${containerID}` command.
 func Rm(containerID string) error {
 	dockerRmCommand := exec.Command(containerCommand, "rm", "-f", containerID)
 	err := dockerRmCommand.Start()

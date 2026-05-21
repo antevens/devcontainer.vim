@@ -24,17 +24,17 @@ func buildDevcontainerStartVimExecArgs(containerID string, workspaceFolder strin
 	return append(args, shell)
 }
 
-// `devcontainer.vim start` 時の `devcontainer exec` の引数を組み立てる
+// Assemble the arguments for `devcontainer exec` during `devcontainer.vim start`
 //
 // Args:
-//   - containerID: コンテナ ID
-//   - workspaceFolder: ワークスペースフォルダパス
-//   - vimFileName: コンテナ上に転送した vim/nvim のファイル名
-//   - useSystemVim: true の場合、システムにインストールした vim/nvim を利用する
+//   - containerID: Container ID
+//   - workspaceFolder: Workspace folder path
+//   - vimFileName: Filename of vim/nvim transferred to the container
+//   - useSystemVim: If true, use vim/nvim installed on the system
 //
 // Return:
 //
-//	`devcontainer exec` に使うコマンドライン引数の配列
+//	Array of command line arguments used for `devcontainer exec`
 func devcontainerStartVimArgs(containerID string, workspaceFolder string, vimFileName string, tmuxFileName string, sendToTCP string, containerArch string, useSystemVim bool, useSystemTmux bool, noTmux bool, shell string, configDirForDevcontainer string) ([]string, error) {
 	var templateSource string
 	var err error
@@ -66,7 +66,7 @@ func devcontainerStartVimArgs(containerID string, workspaceFolder string, vimFil
 		return nil, err
 	}
 
-	// Vim 起動スクリプトを出力
+	// Output Vim launch script
 	vimLaunchScript := filepath.Join(configDirForDevcontainer, "VimRun.sh")
 	os.RemoveAll(vimLaunchScript)
 	err = os.WriteFile(vimLaunchScript, []byte(vimRunScript), 0766)

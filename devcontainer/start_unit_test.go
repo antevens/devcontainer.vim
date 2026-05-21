@@ -8,15 +8,15 @@ import (
 	"testing"
 )
 
-// startDevcontainer関数の単体テスト（モック）
+// Unit test for startDevcontainer function (mock)
 func TestStartDevcontainerMock(t *testing.T) {
-	// パラメータの検証テスト
+	// Parameter validation test
 	args := []string{"image", "workspace"}
 	devcontainerPath := "/mock/devcontainer"
 	configFilePath := "/mock/config.json"
 	workspaceFolder := "workspace"
 
-	// 引数の妥当性チェック
+	// Argument validity check
 	if len(args) < 2 {
 		t.Fatal("args should have at least 2 elements")
 	}
@@ -36,13 +36,13 @@ func TestStartDevcontainerMock(t *testing.T) {
 	t.Logf("startDevcontainer parameters validated successfully")
 }
 
-// startClipboardReceiverForDevcontainer関数の単体テスト（モック）
+// Unit test for startClipboardReceiverForDevcontainer function (mock)
 func TestStartClipboardReceiverForDevcontainerMock(t *testing.T) {
-	// パラメータの検証テスト
+	// Parameter validation test
 	cdrPath := "/mock/cdr"
 	configDirForDevcontainer := "/mock/config"
 
-	// 引数の妥当性チェック
+	// Argument validity check
 	if cdrPath == "" {
 		t.Fatal("cdrPath should not be empty")
 	}
@@ -54,14 +54,14 @@ func TestStartClipboardReceiverForDevcontainerMock(t *testing.T) {
 	t.Logf("startClipboardReceiverForDevcontainer parameters validated successfully")
 }
 
-// setupPortForwarding関数の単体テスト（モック）
+// Unit test for setupPortForwarding function (mock)
 func TestSetupPortForwardingMock(t *testing.T) {
-	// パラメータの検証テスト
+	// Parameter validation test
 	containerID := "mock-container-id"
 	devcontainerPath := "/mock/devcontainer"
 	workspaceFolder := "/mock/workspace"
 
-	// 引数の妥当性チェック
+	// Argument validity check
 	if containerID == "" {
 		t.Fatal("containerID should not be empty")
 	}
@@ -77,22 +77,22 @@ func TestSetupPortForwardingMock(t *testing.T) {
 	t.Logf("setupPortForwarding parameters validated successfully")
 }
 
-// Start関数の統合テスト（軽量版）
+// Integration test for Start function (lightweight version)
 func TestStartParameterValidation(t *testing.T) {
-	// 一時ディレクトリを作成
+	// Create temporary directory
 	tempDir, err := os.MkdirTemp("", "start_test")
 	if err != nil {
 		t.Fatalf("Failed to create temp dir: %v", err)
 	}
 	defer os.RemoveAll(tempDir)
 
-	// テスト用パラメータ
+	// Parameters for testing
 	services := TestDevcontainerStartUseService{}
 	args := []string{"test-image", "workspace"}
 	devcontainerPath := "/mock/devcontainer"
 	nvim := false
 
-	// パラメータの妥当性を検証
+	// Validate parameter validity
 	if len(args) < 2 {
 		t.Fatal("args should have at least 2 elements")
 	}
@@ -102,14 +102,14 @@ func TestStartParameterValidation(t *testing.T) {
 		t.Fatal("workspaceFolder should not be empty")
 	}
 
-	// その他のパラメータも検証
+	// Validate other parameters
 	if devcontainerPath == "" {
 		t.Fatal("devcontainerPath should not be empty")
 	}
 
 	t.Logf("Start function parameters validated: args=%v, workspace=%s, nvim=%v", args, workspaceFolder, nvim)
 
-	// サービスインターフェースも検証
+	// Validate service interface
 	_ = services
 }
 

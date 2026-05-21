@@ -38,7 +38,7 @@ func CreateTestCreateDirectoryFailedPath() (string, error) {
 func TestIsExistsTrue(t *testing.T) {
 	want := true
 
-	// 存在するファイルの存在確認
+	// Check for existence of an existing file
 	got := IsExists("util_test.go")
 
 	if got != want {
@@ -50,7 +50,7 @@ func TestIsExistsTrue(t *testing.T) {
 func TestIsExistsFalse(t *testing.T) {
 	want := false
 
-	// 存在しないファイルの存在確認
+	// Check for existence of a non-existing file
 	got := IsExists("noExistsFile")
 
 	if got != want {
@@ -69,7 +69,7 @@ func pathFuncFailed() (string, error) {
 
 func TestGetConfigDirectorySuccess(t *testing.T) {
 	want := "Hello/success"
-	// 存在しないファイルの存在確認
+	// Check for existence of a non-existing file
 	got, err := CreateConfigDirectory(pathFuncHello, "success")
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -87,7 +87,7 @@ func TestGetConfigDirectorySuccess(t *testing.T) {
 
 func TestGetConfigDirectoryFailed(t *testing.T) {
 	want := "Hello/failed"
-	// 存在しないファイルの存在確認
+	// Check for existence of a non-existing file
 	got, err := CreateConfigDirectory(pathFuncFailed, "failed")
 	if err == nil {
 		t.Fatalf("not return error got: %s", got)
@@ -105,7 +105,7 @@ func TestGetConfigDirectoryFailed(t *testing.T) {
 
 func TestCreateCacheDirectorySuccess(t *testing.T) {
 	wantBase := "Hello/success"
-	// 存在しないファイルの存在確認
+	// Check for existence of a non-existing file
 	gotAppCacheDir, _, _, _, err := CreateCacheDirectory(pathFuncHello, "success")
 	if err != nil {
 		t.Fatalf("error: %s", err)
@@ -196,7 +196,7 @@ func TestCreateConfigFileForDevcontainer(t *testing.T) {
 		os.RemoveAll("./test/resource/config/5ffc48ca73a1122ac36772801370c276/")
 	}()
 
-	// config ディレクトリ下に MD5 ハッシュのフォルダが作成される
+	// An MD5 hashed folder is created under the config directory
 	if !IsExists("./test/resource/config/5ffc48ca73a1122ac36772801370c276/") {
 		t.Fatal("config directory not found: ./test/resource/config/5ffc48ca73a1122ac36772801370c276/")
 	}
@@ -213,14 +213,14 @@ func TestCreateConfigFileForDevcontainer(t *testing.T) {
 	var unmarshaledJson map[string]interface{}
 	json.Unmarshal(bytes, &unmarshaledJson)
 
-	// ベース json の値が取得できる
+	// Base JSON values can be retrieved
 	want := unmarshaledJson["name"]
 	got := "test_name"
 	if want != got {
 		t.Fatalf("error: want %s, but got %s", want, got)
 	}
 
-	// 追加 json の値も取得できる
+	// Additional JSON values can also be retrieved
 	want2 := unmarshaledJson["additional_key"]
 	got2 := "additional_value"
 	if want != got {
@@ -268,20 +268,20 @@ func TestCreateFileWithContents(t *testing.T) {
 
 	defer os.RemoveAll(file)
 
-	// ファイルの存在確認
+	// Check for file existence
 	fileInfo, err := os.Stat(file)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}
 
-	// モードが設定した通りか？
+	// Is the mode as set?
 	wantFileModeString := "-rwxr-xr-x"
 	gotFileModeString := fileInfo.Mode().String()
 	if wantFileModeString != gotFileModeString {
 		t.Fatalf("error: want %s, but got %s", wantFileModeString, gotFileModeString)
 	}
 
-	// コンテンツが設定した通りか？
+	// Is the content as set?
 	bytes, err := os.ReadFile(file)
 	if err != nil {
 		t.Fatalf("err: %s", err)

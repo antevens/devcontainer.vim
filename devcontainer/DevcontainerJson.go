@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-// devcontainer.json のスキーマ(の一部)
+// Schema (part of) devcontainer.json
 type DevcontainerJSON struct {
 	DockerComposeFile interface{} `json:"dockerComposeFile"`
 }

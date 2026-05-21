@@ -20,12 +20,12 @@
   // "postCreateCommand": "npm install -g @openai/codex",
   // If use Gemini
   // "postCreateCommand": "npm install -g @google/gemini-cli",
-  // devcontainer/cli はまだ forwardPorts に対応していないため、
-  // 必要に応じて forwardPorts の定義を appPort に転記する。
-  // ※ コンテナ側で Listen する際は、 `127.0.0.1` **ではなく** `0.0.0.0` で Listen すること。
+  // Since devcontainer/cli does not yet support forwardPorts,
+  // copy the forwardPorts definition to appPort as needed.
+  // * When listening on the container side, listen on 0.0.0.0 **instead of** 127.0.0.1.
   // "appPort": [
   // ],
-  // Linux で実行する場合には、 runArgs をコメントアウトし、コンテナからホストへの接続ができるようにしてください
+  // When running on Linux, uncomment runArgs to enable connection from the container to the host.
   //"runArgs": [
   //  "--add-host=host.docker.internal:host-gateway"
   //],
@@ -87,9 +87,9 @@
     //  "target": "{{ remoteEnv:HOME }}/.config/github-copilot"
     //},
   ],
-  // denops など、別の実行環境が必要な場合や、
-  // 後乗せで追加したいツールがある場合には以下の対象行をコメントアウトするか
-  // https://containers.dev/features から必要な feature を探して追加してください。
+  // If a separate execution environment is required, such as denops,
+  // or if there are tools you want to add later, uncomment the relevant lines below
+  // or find and add the necessary features from https://containers.dev/features.
   //"features": {
   //  "ghcr.io/devcontainers-community/features/deno:1": {},
   //  "ghcr.io/devcontainers/features/node:1": {},

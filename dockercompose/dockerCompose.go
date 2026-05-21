@@ -31,16 +31,16 @@ func (e *DownCommandError) Error() string {
 	return e.msg
 }
 
-// `docker compose ps --format json` を実行し、結果の文字列を返却する。
+// Executes `docker compose ps --format json` and returns the result string.
 func Ps(workspaceFolder string) (string, error) {
 
-	// 現在のディレクトリを記憶
+	// Remember current directory
 	currentDirectory, err := os.Getwd()
 	if err != nil {
 		return "", &PsCommandError{msg: "Failed to get current directory"}
 	}
 
-	// 元のディレクトリへ戻る
+	// Return to original directory
 	defer func() error {
 		err := os.Chdir(currentDirectory)
 		if err != nil {
@@ -49,36 +49,36 @@ func Ps(workspaceFolder string) (string, error) {
 		return nil
 	}()
 
-	// ワークスペースまで移動
+	// Move to workspace
 	err = os.Chdir(workspaceFolder)
 	if err != nil {
-		return "", &PsCommandError{msg: "ワークスペースへの移動に失敗しました。指定したディレクトリが存在するか・パーミッションが正しいかの確認をしてください。 "}
+		return "", &PsCommandError{msg: "Failed to move to the workspace. Please check if the specified directory exists and if the permissions are correct."}
 	}
 
 	dockerComposePsCommand := exec.Command(containerCommand, "compose", "ps", "--all", "--format", "json")
 	stdout, err := dockerComposePsCommand.Output()
 	if err != nil {
-		return "", &PsCommandError{msg: "docker compose ps コマンドの実行に失敗しました。docker がインストールされているか・docker エンジンが起動しているかの確認をしてください。 "}
+		return "", &PsCommandError{msg: "Failed to execute docker compose ps command. Please check if docker is installed and if the docker engine is running."}
 	}
 	return string(stdout), err
 }
 
-// `docker compose -p ${projectName} stop` を実行する。
+// Executes `docker compose -p ${projectName} stop`.
 func Stop(projectName string) error {
 	dockerComposeStopCommand := exec.Command(containerCommand, "compose", "-p", projectName, "stop")
 	err := dockerComposeStopCommand.Start()
 	if err != nil {
-		return &StopCommandError{msg: "docker compose stop コマンドの実行に失敗しました。docker がインストールされているか・docker エンジンが起動しているかの確認をしてください。 "}
+		return &StopCommandError{msg: "Failed to execute docker compose stop command. Please check if docker is installed and if the docker engine is running."}
 	}
 	return nil
 }
 
-// `docker compose -p ${projectName} down` を実行する。
+// Executes `docker compose -p ${projectName} down`.
 func Down(projectName string) error {
 	dockerComposeDownCommand := exec.Command(containerCommand, "compose", "-p", projectName, "down")
 	err := dockerComposeDownCommand.Start()
 	if err != nil {
-		return &DownCommandError{msg: "docker compose down コマンドの実行に失敗しました。docker がインストールされているか・docker エンジンが起動しているかの確認をしてください。 "}
+		return &DownCommandError{msg: "Failed to execute docker compose down command. Please check if docker is installed and if the docker engine is running."}
 	}
 	return nil
 }

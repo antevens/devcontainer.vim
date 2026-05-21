@@ -32,16 +32,16 @@ func buildDockerRunVimExecArgs(containerID string, shell string) []string {
 	}
 }
 
-// `devcontainer.vim run` 時の `docker exec` の引数を組み立てる
+// Assemble the arguments for `docker exec` during `devcontainer.vim run`
 //
 // Args:
-//   - containerID: コンテナ ID
-//   - vimFileName: コンテナ上に転送した vim のファイル名
-//   - useSystemVim: true の場合、システムにインストールされた vim/nvim を使用する
+//   - containerID: Container ID
+//   - vimFileName: Filename of vim transferred to the container
+//   - useSystemVim: If true, use vim/nvim installed on the system
 //
 // Return:
 //
-//	`docker exec` に使うコマンドライン引数の配列
+//	Array of command line arguments used for `docker exec`
 func dockerRunVimArgs(containerID string, vimFileName string, tmuxFileName string, sendToTCP string, containerArch string, useSystemVim bool, useSystemTmux bool, noTmux bool, shell string, configFilePath string) ([]string, error) {
 	var templateSource string
 	var err error
@@ -73,7 +73,7 @@ func dockerRunVimArgs(containerID string, vimFileName string, tmuxFileName strin
 		return nil, err
 	}
 
-	// Vim 起動スクリプトを出力
+	// Output Vim launch script
 	vimLaunchScript := filepath.Join(configFilePath, "VimRun.sh")
 	os.RemoveAll(vimLaunchScript)
 	err = os.WriteFile(vimLaunchScript, []byte(vimRunScript), 0766)

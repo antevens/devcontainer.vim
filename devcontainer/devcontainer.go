@@ -50,9 +50,9 @@ func hasNoCdrOption(args []string) bool {
 
 func Stop(args []string, devcontainerPath string, configDirForDevcontainer string) error {
 
-	// `devcontainer read-configuration` で docker compose の利用判定
+	// Determine docker compose usage with `devcontainer read-configuration`
 
-	// コマンドライン引数の末尾は `--workspace-folder` の値として使う
+	// Use the end of the command line arguments as the value for `--workspace-folder`
 	workspaceFolder := args[len(args)-1]
 	stdout, _ := ReadConfiguration(devcontainerPath, "--workspace-folder", workspaceFolder)
 	if stdout == "" {
@@ -60,11 +60,11 @@ func Stop(args []string, devcontainerPath string, configDirForDevcontainer strin
 		return nil
 	}
 
-	// `dockerComposeFile` が含まれているかを確認する
-	// 含まれているなら docker compose によるコンテナ構築がされている
+	// Check if `dockerComposeFile` is included
+	// If included, the container is built with docker compose
 	if strings.Contains(stdout, "dockerComposeFile") {
 
-		// docker compose ps コマンドで compose の情報取得
+		// Get compose information with docker compose ps command
 		dockerComposePsResultString, err := dockercompose.Ps(workspaceFolder)
 		if err != nil {
 			return err
@@ -74,25 +74,25 @@ func Stop(args []string, devcontainerPath string, configDirForDevcontainer strin
 			return nil
 		}
 
-		// 必要なのは最初の 1 行だけなので、最初の 1 行のみを取得
+		// Since only the first line is needed, get only the first line
 		dockerComposePsResultFirstItemString := strings.Split(dockerComposePsResultString, "\n")[0]
 
-		// docker compose ps コマンドの結果からプロジェクト名を取得
+		// Get project name from docker compose ps command result
 		projectName, err := dockercompose.GetProjectName(dockerComposePsResultFirstItemString)
 		if err != nil {
 			return err
 		}
 
-		// プロジェクト名を使って docker compose stop を実行
+		// Execute docker compose stop using the project name
 		fmt.Printf("Run `docker compose -p %s stop`(Async)\n", projectName)
 
-		// docker-compose.yaml の格納ディレクトリを探す
+		// Search for the storage directory of docker-compose.yaml
 		dockerComposeFileDir, err := findDockerComposeFileDir(workspaceFolder)
 		if err != nil {
 			return err
 		}
 
-		// カレントディレクトリを記録して dockerComposeFileDir へ移動
+		// Record the current directory and move to dockerComposeFileDir
 		currentDir, err := os.Getwd()
 		if err != nil {
 			return err
@@ -104,17 +104,17 @@ func Stop(args []string, devcontainerPath string, configDirForDevcontainer strin
 			return err
 		}
 
-		// 元のカレントディレクトリへ戻る
+		// Return to the original current directory
 		os.Chdir(currentDir)
 
 	} else {
-		// ワークスペースに対応するコンテナを探して ID を取得する
+		// Search for the container corresponding to the workspace and get the ID
 		containerID, err := docker.GetContainerIDFromWorkspaceFolder(workspaceFolder)
 		if err != nil {
 			return err
 		}
 
-		// 取得したコンテナに対して stop を行う
+		// Execute stop on the retrieved container
 		fmt.Printf("Run `docker stop -f %s stop`(Async)\n", containerID)
 		err = docker.Stop(containerID)
 		if err != nil {
@@ -126,9 +126,9 @@ func Stop(args []string, devcontainerPath string, configDirForDevcontainer strin
 
 func Down(args []string, devcontainerPath string, configDirForDevcontainer string) error {
 
-	// `devcontainer read-configuration` で docker compose の利用判定
+	// Determine docker compose usage with `devcontainer read-configuration`
 
-	// コマンドライン引数の末尾は `--workspace-folder` の値として使う
+	// Use the end of the command line arguments as the value for `--workspace-folder`
 	workspaceFolder := args[len(args)-1]
 	stdout, _ := ReadConfiguration(devcontainerPath, "--workspace-folder", workspaceFolder)
 	if stdout == "" {
@@ -136,18 +136,18 @@ func Down(args []string, devcontainerPath string, configDirForDevcontainer strin
 		return nil
 	}
 
-	// `dockerComposeFile` が含まれているかを確認する
-	// 含まれているなら docker compose によるコンテナ構築がされている
+	// Check if `dockerComposeFile` is included
+	// If included, the container is built with docker compose
 	var configDir string
 	if strings.Contains(stdout, "dockerComposeFile") {
 
-		// docker-compose.yaml の格納ディレクトリを探す
+		// Search for the storage directory of docker-compose.yaml
 		dockerComposeFileDir, err := findDockerComposeFileDir(workspaceFolder)
 		if err != nil {
 			return err
 		}
 
-		// カレントディレクトリを記録して dockerComposeFileDir へ移動
+		// Record the current directory and move to dockerComposeFileDir
 		currentDir, err := os.Getwd()
 		if err != nil {
 			return err
@@ -162,7 +162,7 @@ func Down(args []string, devcontainerPath string, configDirForDevcontainer strin
 			return err
 		}
 
-		// docker compose ps コマンドで compose の情報取得
+		// Get compose information with docker compose ps command
 		dockerComposePsResultString, err := dockercompose.Ps(workspaceFolder)
 		if err != nil {
 			return err
@@ -172,50 +172,48 @@ func Down(args []string, devcontainerPath string, configDirForDevcontainer strin
 			return nil
 		}
 
-		// 必要なのは最初の 1 行だけなので、最初の 1 行のみを取得
+		// Since only the first line is needed, get only the first line
 		dockerComposePsResultFirstItemString := strings.Split(dockerComposePsResultString, "\n")[0]
 
-		// docker compose ps コマンドの結果からプロジェクト名を取得
+		// Get project name from docker compose ps command result
 		projectName, err := dockercompose.GetProjectName(dockerComposePsResultFirstItemString)
 		if err != nil {
 			return err
 		}
 
-		// プロジェクト名を使って docker compose down を実行
+		// Execute docker compose down using the project name
 		fmt.Printf("Run `docker compose -p %s down`(Async)\n", projectName)
 		err = dockercompose.Down(projectName)
 		if err != nil {
 			return err
 		}
 
-		// 元のカレントディレクトリへ戻る
+		// Return to the original current directory
 		err = os.Chdir(currentDir)
 		if err != nil {
 			return err
 		}
 
-		// pid ファイル参照のために、
-		// コンテナ別の設定ファイル格納ディレクトリの名前(コンテナIDを記録)を記録
+		// Record the name of the configuration file storage directory for each container (record container ID) for pid file reference
 		configDir, err = util.GetConfigDir(configDirForDevcontainer, workspaceFolder)
 		if err != nil {
 			return err
 		}
 	} else {
-		// ワークスペースに対応するコンテナを探して ID を取得する
+		// Search for the container corresponding to the workspace and get the ID
 		containerID, err := docker.GetContainerIDFromWorkspaceFolder(workspaceFolder)
 		if err != nil {
 			return err
 		}
 
-		// 取得したコンテナに対して rm を行う
+		// Execute rm on the retrieved container
 		fmt.Printf("Run `docker rm -f %s down`(Async)\n", containerID)
 		err = docker.Rm(containerID)
 		if err != nil {
 			return err
 		}
 
-		// pid ファイル参照のために、
-		// コンテナ別の設定ファイル格納ディレクトリの名前(コンテナIDを記録)を記録
+		// Record the name of the configuration file storage directory for each container (record container ID) for pid file reference
 		configDir, err = util.GetConfigDir(configDirForDevcontainer, workspaceFolder)
 		if err != nil {
 			return err
@@ -223,7 +221,7 @@ func Down(args []string, devcontainerPath string, configDirForDevcontainer strin
 	}
 
 	if !hasNoCdrOption(args) {
-		// clipboard-data-receiver を停止
+		// Stop clipboard-data-receiver
 		pidFile := filepath.Join(configDir, "pid")
 		fmt.Printf("Read PID file: %s\n", pidFile)
 		pidStringBytes, err := os.ReadFile(pidFile)
@@ -245,9 +243,9 @@ func Down(args []string, devcontainerPath string, configDirForDevcontainer strin
 	return nil
 }
 
-// devcontainer.json の場所・ディレクトリを差がして返却する
+// Find and return the location/directory of devcontainer.json
 func findJSONInfo(workspaceFolder string) (string, string, error) {
-	// カレントディレクトリを記録して workspaceFolder へ移動
+	// Record the current directory and move to workspaceFolder
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return "", "", err
@@ -259,7 +257,7 @@ func findJSONInfo(workspaceFolder string) (string, string, error) {
 		return "", "", err
 	}
 
-	// devcontainer.json を取得
+	// Get devcontainer.json
 	var devcontainerJSONPath, devcontainerJSONDir string
 	if util.IsExists(".devcontainer/devcontainer.json") {
 		devcontainerJSONPath = ".devcontainer/devcontainer.json"
@@ -281,28 +279,28 @@ func findJSONInfo(workspaceFolder string) (string, string, error) {
 	return devcontainerJSONPath, devcontainerJSONDir, nil
 }
 
-// docker-compose.yaml の格納ディレクトリを返却する
+// Returns the storage directory of docker-compose.yaml
 func findDockerComposeFileDir(workspaceFolder string) (string, error) {
-	// devcontainer.json を取得
+	// Get devcontainer.json
 	devcontainerJSONPath, devcontainerJSONDir, err := findJSONInfo(workspaceFolder)
 	if err != nil {
 		return "", err
 	}
 
-	// devcontainer.json 読み込み
+	// Read devcontainer.json
 	// fmt.Printf("devcontainerJSONPath directory: %s\n", devcontainerJSONPath)
 	devcontainerJSONBytes, err := util.ParseJwcc(devcontainerJSONPath)
 	if err != nil {
 		return "", err
 	}
 
-	// docker-compose.yaml の格納ディレクトリを組み立て
+	// Assemble the storage directory for docker-compose.yaml
 	devcontainerJSON, err := UnmarshalDevcontainerJSON(devcontainerJSONBytes)
 	if err != nil {
 		return "", err
 	}
 
-	// string, []string を判別しながら docker-compose.yaml の場所を取得
+	// Get the location of docker-compose.yaml while distinguishing between string and []string
 	iDockerComposeFile := devcontainerJSON.DockerComposeFile
 	fmt.Println(iDockerComposeFile)
 	var dockerComposeFilePath string
@@ -313,7 +311,7 @@ func findDockerComposeFileDir(workspaceFolder string) (string, error) {
 		vv := v[0].(string)
 		dockerComposeFilePath = filepath.Join(devcontainerJSONDir, vv)
 	default:
-		return "", &UnknownTypeError{msg: "docker compose file path の型が不正です。 GitHub に issue を立てていただけるとありがたいです。"}
+		return "", &UnknownTypeError{msg: "Invalid docker compose file path type. Please open an issue on GitHub."}
 	}
 	dockerComposeFileDir := filepath.Dir(dockerComposeFilePath)
 
@@ -330,7 +328,7 @@ func ReadConfiguration(devcontainerFilePath string, readConfiguration ...string)
 	args := append([]string{"read-configuration"}, readConfiguration...)
 	result, err := Execute(devcontainerFilePath, args...)
 	if err != nil {
-		return "", errors.New("`devcontainer read-configuration` に失敗しました。`.devcontainer.json が存在することと、 docker エンジンが起動していることを確認してください。")
+		return "", errors.New("devcontainer read-configuration failed. Please check if .devcontainer.json exists and if the docker engine is running.")
 	}
 	return result, err
 }
@@ -339,7 +337,7 @@ func Templates(
 	devcontainerFilePath string,
 	workspaceFolder string,
 	templateID string) (string, error) {
-	// コマンドライン引数の末尾は `--workspace-folder` の値として使う
+	// Use the end of the command line arguments as the value for `--workspace-folder`
 
 	args := []string{"templates", "apply", "--template-id", templateID, "--workspace-folder", workspaceFolder}
 	return ExecuteCombineOutput(devcontainerFilePath, args...)
@@ -359,11 +357,11 @@ func ExecuteCombineOutput(devcontainerFilePath string, args ...string) (string, 
 	return string(stdout), err
 }
 
-// devcontainer.vim 起動時に使用する設定ファイルを作成する
-// 設定ファイルは、 devcontainer.vim のキャッシュ内の `config` ディレクトリに、
-// ワークスペースフォルダのパスを md5 ハッシュ化した名前のディレクトリに格納する.
+// Create the configuration file used when starting devcontainer.vim
+// The configuration file is stored in the config directory within the devcontainer.vim cache,
+// in a directory named after the md5 hash of the workspace folder path.
 func CreateConfigFile(devcontainerPath string, workspaceFolder string, configDirForDevcontainer string) (string, error) {
-	// devcontainer の設定ファイルパス取得
+	// Get devcontainer configuration file path
 	configFilePath, err := GetConfigurationFilePath(devcontainerPath, workspaceFolder)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -372,11 +370,11 @@ func CreateConfigFile(devcontainerPath string, workspaceFolder string, configDir
 		return "", err
 	}
 
-	// devcontainer.vim 用の追加設定ファイルを探す
+	// Search for additional configuration file for devcontainer.vim
 	configurationFileName := configFilePath[:len(configFilePath)-len(filepath.Ext(configFilePath))]
 	additionalConfigurationFilePath := configurationFileName + ".vim.json"
 
-	// 設定管理フォルダに JSON を配置
+	// Place JSON in the configuration management folder
 	mergedConfigFilePath, err := util.CreateConfigFileForDevcontainer(configDirForDevcontainer, workspaceFolder, configFilePath, additionalConfigurationFilePath)
 	if err != nil {
 		if errors.Is(err, os.ErrPermission) {

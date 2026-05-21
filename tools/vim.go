@@ -7,12 +7,12 @@ import (
 	"text/template"
 )
 
-// Vim のダウンロード URL
+// Download URL for Vim
 const vimAppImageDownloadURLPattern = "https://github.com/vim/vim-appimage/releases/download/{{ .TagName }}/Vim-{{ .TagName }}.glibc2.34-x86_64.AppImage"
 const vimX64StaticDownloadURLPattern = "https://github.com/mikoto2000/vim-static/releases/download/{{ .TagName }}/vim-{{ .TagName }}-x86_64.tar.gz"
 const vimArmStaticDownloadURLPattern = "https://github.com/mikoto2000/vim-static/releases/download/{{ .TagName }}/vim-{{ .TagName }}-aarch64.tar.gz"
 
-// Vim のツール情報
+// Tool information for Vim
 var VIM = func(service InstallerUseServices) Tool {
 	return Tool{
 		FileName: "vim",

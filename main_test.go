@@ -30,7 +30,7 @@ func TestCreateConfigFile(t *testing.T) {
 		if errors.Is(err, os.ErrNotExist) {
 			t.Skipf("configuration file not found: %v", err)
 		}
-		if strings.Contains(err.Error(), "出力パースに失敗") || strings.Contains(err.Error(), "read-configuration` に失敗") {
+		if strings.Contains(err.Error(), "failed to parse") || strings.Contains(err.Error(), "read-configuration failed") {
 			t.Skipf("devcontainer CLI environment issue: %v", err)
 		}
 		t.Fatalf("error: %v", err)

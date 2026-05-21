@@ -5,31 +5,31 @@ import (
 	"net"
 )
 
-// ポートフォワーディングの主処理を行う。
-// 転送先・転送元のデータ通信をリレーする。
+// Main process for port forwarding.
+// Relays data communication between the destination and source.
 func forward(src net.Conn, dstAddr string) error {
 	defer src.Close()
 
-	// 転送先に接続
+	// Connect to the destination
 	dst, err := net.Dial("tcp", dstAddr)
 	if err != nil {
 		return err
 	}
 	defer dst.Close()
 
-	// 双方向のデータ転送を行う
-	// クライアント → 転送先
+	// Perform bidirectional data transfer
+	// Client -> Destination
 	go io.Copy(dst, src)
 
-	// 転送先 → クライアント
+	// Destination -> Client
 	io.Copy(src, dst)
 
 	return nil
 }
 
-// ポートフォワーディング開始
+// Start port forwarding
 func StartForwarding(listenAddr, forwardAddr string) error {
-	// listener 生成
+	// Create listener
 	listener, err := net.Listen("tcp", listenAddr)
 	if err != nil {
 		return err
@@ -37,13 +37,13 @@ func StartForwarding(listenAddr, forwardAddr string) error {
 	defer listener.Close()
 
 	for {
-		// listen 開始
+		// Start listening
 		client, err := listener.Accept()
 		if err != nil {
 			continue
 		}
 
-		// 主処理(バケツリレー)を実行
+		// Execute the main process (relay)
 		go forward(client, forwardAddr)
 	}
 }

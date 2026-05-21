@@ -1,49 +1,48 @@
-**日本語** / [English](README_en.md)
-
 # devcontainer.vim
 
-コンテナ上で Vim を使った開発をするためのツール。 (VSCode Dev Container の Vim 版)
+A tool for developing with Vim on a container. (Vim version of VSCode Dev Container)
 
-VSCode 向けに作成された `devcontainer.json` に追加する形で Vim による Dev Container 開発のための設定を追加・起動するツールです。
+It's a tool that adds and starts settings for Vim-based Dev Container development in the form of additions to the `devcontainer.json` file created for VSCode.
+
 
 ## Getting Started
 
-- [devcontainer.vim で、コンテナ上の Vim に引きこもって作業を行う(ゼロから環境構築をしてみよう編) - mikoto2000 の日記](https://mikoto2000.blogspot.com/2024/10/devcontainervim-vim.html)
-- [devcontainer.vim と codex cli を使って Go プログラミング！ - YouTube](https://www.youtube.com/watch?v=grFA12Mwsy0)
-- [devcontainer.vim と Claude Code を使って Java プログラミング！ - YouTube](https://www.youtube.com/watch?v=d5m9DaqNhLA)
-- [？「えっ！1分でGo言語の環境構築を！？」 devcontainer.vim「できらぁ！」 - YouTube](https://www.youtube.com/shorts/v0h6AfRIyvs)
+- [Developing with Vim on a container using devcontainer.vim (Environment construction from scratch) - mikoto2000's blog](https://mikoto2000.blogspot.com/2024/10/devcontainervim-vim.html)
+- [Go programming using devcontainer.vim and codex cli! - YouTube](https://www.youtube.com/watch?v=grFA12Mwsy0)
+- [Java programming using devcontainer.vim and Claude Code! - YouTube](https://www.youtube.com/watch?v=d5m9DaqNhLA)
+- [? "What! Setting up Go environment in 1 minute?!" devcontainer.vim "I can do it!" - YouTube](https://www.youtube.com/shorts/v0h6AfRIyvs)
 
 
 ## Features:
 
-- 開発用コンテナを立ち上げ、そこに Vim/NeoVim と tmux を転送し、tmux 上で Vim を起動する
-    - `devcontainer.json` が無いプロジェクトで、ワンショットで開発用コンテナを立ち上げる
-        - docker に渡す引数のカスタマイズができる
-    - `devcontainer.json` が無いプロジェクトに、`devcontainer.json` のテンプレートを追加できる
-    - `devcontainer.json` があるプロジェクトで、開発用コンテナを開始・停止・削除できる
-    - `devcontainer.json` とは別に、 `devcontainer.vim.json` を記述することで
-      開発用コンテナに `devcontainer.vim` 用の設定を追加できる
-    - 開発用コンテナで起動する Vim に追加で設定する vimrc を定義できる
-    - 開発コンテナ内に Vim/NeoVim のパスが通っている場合、それを利用する
-- 開発用コンテナ上の Vim でヤンクした文字列を、ホスト PC のクリップボードへ貼り付けられる
-- 開発用コンテナ内で使用したいツールを、開発用コンテナに転送して使用可能にする
-- `vim`, `devcontainer`, `clipboard-data-receiver` など、使用するツールのアップデートができる
-- セルフアップデートができる
+- Set up a development container, transfer Vim/NeoVim and tmux to it, and start Vim inside tmux.
+    - For projects without `devcontainer.json`, launch a development container in a single shot
+        - You can customize the arguments passed to docker.
+    - Add a template for `devcontainer.json` to projects that don't have a `devcontainer.json` file
+    - In a project with a `devcontainer.json` file, you can start, stop, and delete the development container.
+    - In addition to `devcontainer.json`, you can add settings for `devcontainer.vim`
+      to the development container by specifying `devcontainer.vim.json`.
+    - You can define a vimrc to be used with Vim launched in a development container.
+    - If the path to Vim/NeoVim is set in the development container, use it.
+- The text copied in Vim on the development container can be pasted to the clipboard of the host PC.
+- Transfer tools to be used in the development container to make them usable in the development container.
+- Tools such as `vim`, `devcontainer`, and `clipboard-data-receiver` can be updated.
+- Self-update capability
 
 
 ## Requirements:
 
-以下コマンドがインストール済みで、PATH が通っていること。
+The following commands are installed and in the PATH.
 
 - docker
 
-コンテナ内に以下コマンドが存在し、 PATH が通っていること。
+The following commands must exist in the container and be in the PATH.
 
 - which
 - hostname
 
 
-ARM の場合、コンテナ内に `tar` コマンドが存在していること
+For ARM, the `tar` command must be present in the container.
 
 
 ## Usage:
@@ -84,91 +83,91 @@ GLOBAL OPTIONS:
    --version, -v  print the version
 ```
 
-### `devcontainer.json` が存在しないプロジェクトで、ワンショットで環境を立ち上げる
+### Set up an environment in a project where `devcontainer.json` does not exist.
 
 ```sh
 devcontainer.vim run [DOCKER_OPTIONS] [DOCKER_ARGS]
 ```
-
-`docker run -it --rm -v "$(pwd):/work" --workdir /work -v "$HOME/.vim:/root/.vim" --name golang golang:1.22.1-bookworm` コマンド相当の環境でコンテナを立ち上げる場合の例:
+Example of running a container in an environment equivalent to the `docker run -it --rm -v "$(pwd):/work" --workdir /work -v "$HOME/.vim:/root/.vim" --name golang golang:1.22.1-bookworm` command:
 
 ```sh
 devcontainer.vim run -v "$(pwd):/work" --workdir /work -v "$HOME/.vim:/root/.vim" --name golang golang:1.22.1-bookworm
 ```
 
-### `devcontainer.json` が存在する場合
 
-#### 環境の起動
+### if `devcontainer.json` exists
 
-`start` サブコマンドで、環境を立ち上げ、Vim を転送し、起動できる。
+#### Environmental start
 
-たとえば、カレントディレクトリから `devcontainer.json` を検索し、読み込み、環境を立ち上げ、Vim を転送し、起動する場合は以下。
+The `start` subcommand sets up the environment, transfers Vim, and starts it.
+
+For example, if you want to search for `devcontainer.json` in the current directory, read it, set up the environment, transfer Vim, and start it, you can do the following.
 
 ```sh
 devcontainer.vim start .
 ```
 
-tmux を使わずに直接 Vim/NeoVim を起動したい場合は、`--notmux` を付ける。
+If you want to launch Vim/NeoVim directly without tmux, add `--notmux`.
 
 ```sh
 devcontainer.vim --notmux start .
 ```
 
-`devcontainer` への引数を(`--workspace-folder` 以外は) そのまま利用できるため、
-`.vim` をバインドしたい場合、以下のように指定する。
+You can use arguments to `devcontainer` (except for `--workspace-folder`) as they are, so if you want to bind `.vim`, specify it as follows.
 
 ```sh
 devcontainer.vim start --mount "type=bind,source=$HOME/.vim,target=/root/.vim" .
 ```
 
-#### 環境の停止
+#### Environmental stop
 
-`stop` サブコマンドで環境の停止ができる。
+The `stop` subcommand allows you to stop the environment.
 
 ```sh
 devcontainer.vim stop .
 ```
 
-再開したい場合は、もう一度 `start` サブコマンドを実行する。
+To resume, execute the `start` subcommand again.
 
 
-#### 環境の削除
+#### Environment deletion
 
-`down` サブコマンドで環境の削除ができる。
+The `down` subcommand can delete the environment.
 
 ```sh
 devcontainer.vim down .
 ```
 
 
-#### ツールのアップデート
+#### Tool update
 
-`devcontainer.vim` が内部で利用するツールをアップデートしたい場合には、 `tool` サブコマンドを使用する。
+To update the tools used internally by `devcontainer.vim`, use the `tool` subcommand.
+
 
 ```sh
-# Vim のアップデート
+# update Vim
 devcontainer.vim tool vim download
 
-# tmux のアップデート
+# update tmux
 devcontainer.vim tool tmux download
 
-# devcontainer CLI のアップデート
+# update devcontainer CLI 
 devcontainer.vim tool devcontainer download
 ```
 
-#### devcontainer.vim 自身のアップデート
+#### self update
 
-`self-update` サブコマンドを使用して、 `devcontainer.vim` 自身を最新バージョンに更新できます。
+You can update `devcontainer.vim` to the latest version using the `self-update` subcommand.
 
 ```sh
 devcontainer.vim self-update
 ```
 
-### テンプレートをもとに `devcontainer.json` を作成する
+### Create `devcontainer.json` based on the template
 
-`devcontainer.vim templates apply` サブコマンドを使用することで、 devcontainers が提供しているテンプレートから `devcontainer.json` を生成できる。
+The `devcontainer.vim templates apply` subcommand allows you to generate a `devcontainer.json` file from templates provided by devcontainers.
 
-`Go` のテンプレートを用いて `devcontainer.json` を生成する場合の例:
+Example of generating `devcontainer.json` using the `Go` template:
 
 ```sh
 $ devcontainer.vim templates apply .
@@ -180,33 +179,33 @@ Search: Go
     Hugo & pnpm
 ```
 
-`devcontainer.vim templates apply` を実行すると、テンプレート名の一覧が表示されるので、キー入力で名前をインクリメンタル検索し、上下キーでカーソルを移動・エンターキーでテンプレートを決定できる。
+Running `devcontainer.vim templates apply` will show a list of template names.
+You can use the key input to incrementally search for names, move the cursor with the up and down keys, and select a template with the Enter key.
 
 
-## サブコマンドの補完
+## Subcommand Completion
 
-`devcontainer.vim` にパスを通し、 `.bashrc` などに以下コードを追加することで、サブコマンドの補完が有効になります。
+Passing the path to `devcontainer.vim` and adding the following code to `.bashrc` or similar will enable subcommand completion.
 
 ```sh
 eval "$(devcontainer.vim bash-complete-func)"
 ```
 
-
 ## Customize:
 
-### コンテナのカスタマイズ
+### Container Customization
 
-`.vim` や `vimfiles` など、ホストからバインドマウントさせたいものがあるが、
-VSCode 等の他ツール向けに作成した `devcontainer.json` に devcontainer.vim 専用の `mounts` 定義を付けることはしたくない。
+I want to bind some things like `.vim` and `vimfiles` from the host to the bind mount,
+but I don't want to add a `mounts` definition specific to `devcontainer.vim` to the `devcontainer.json` that I created for other tools like VSCode.
 
-そのため、別途 devcontainer.vim のみが読み込むファイルを `.devcontainer/devcontainer.vim.json` に配置する。
-devcontainer.vim は、 `.devcontainer/devcontainer.json` と `.devcontainer/devcontainer.vim.json` をマージして実行する。
+Therefore, the file that is read only by devcontainer.vim is placed in `.devcontainer/devcontainer.vim.json`.
+`devcontainer.vim` merges and executes `.devcontainer/devcontainer.json` and `.devcontainer/devcontainer.vim.json`.
 
 ```
 PROJECT_ROOT/
     +- .devcontainer/
-    |   +- devcontainer.json      # 普通の devcontainer 向けの設定を記述
-    |   +- devcontainer.vim.json  # .vim のマウントなど、 devcontainer.vim のみで利用したい設定を記述
+    |   +- devcontainer.json      # Ordinary settings for devcontainer
+    |   +- devcontainer.vim.json  # Settings used only by devcontainer.vim, such as mounting .vim
     |
     +- ...(other project files)
 ```
@@ -236,25 +235,30 @@ PROJECT_ROOT/
 }
 ```
 
-#### 追加の設定を生成する
 
-`devcontainer.vim config -g` で `devcontainer.vim` が使用するための追加設定ファイルのテンプレートを生成できる。
+#### Generate additional settings
+
+`devcontainer.vim config -g` generates a template for additional configuration files used by `devcontainer.vim`.
 
 ```sh
 devcontainer.vim config -g --home /home/containerUser > .devcontainer/devcontainer.vim.json
 ```
 
-使用できるオプションは以下:
+Available options are as follows:
 
-- `-g` : 設定生成フラグ
-- `-o` : 生成した設定の出力先ファイルを指定(default: STDOUT)
-- `--home` : 設定テンプレート内のホームディレクトリのパス
+- `-g` : setting generation flag
+- `-o` : Specify the output file for the generated configuration (default: STDOUT)
+- `--home`: Path to the home directory in the configuration template
 
-#### 追加のランタイムをコンテナへインストールする
 
-[denops.vim](https://github.com/vim-denops/denops.vim) や [coc.nvim](https://github.com/neoclide/coc.nvim) など 別途ランタイムが必要なプラグインを使用している場合、 `devcontainer.vim.json` の `features` にイメージ ID を追加することで、コンテナへランタイムをインストールできる。
+#### Install additional runtime in the container
 
-deno をコンテナにインストールする例:
+If you use plugins that require a separate runtime, such as
+[denops.vim](https://github.com/vim-denops/denops.vim) or
+[coc.nvim](https://github.com/neoclide/coc.nvim),
+you can install the runtime in the container by adding the image ID to the `features` section of `devcontainer.vim.json`.
+
+Example of installing deno in a container:
 
 ```json
 ...(snip)
@@ -264,20 +268,22 @@ deno をコンテナにインストールする例:
 ...(snip)
 ```
 
-`features` に指定できるイメージは [Available Dev Container Features](https://containers.dev/features) で確認できる。
+The images that can be specified in `features` can be checked in
+[Available Dev Container Features](https://containers.dev/features).
 
 
-### Vim のカスタマイズ
+### Vim Customization
 
-#### devcontainer.vim 上の Vim にのみ読み込まれる vimrc の作成
+#### Creating a vimrc that is only loaded for Vim on devcontainer.vim
 
-`devcontainer.vim vimrc -o` で、コンテナ上で実行する Vim に、追加で読み込ませるスクリプトが開きます。
+`devcontainer.vim vimrc -o` opens a script that will be additionally loaded into Vim running in the container.
 
-このスクリプトを更新することで、コンテナ上の Vim のみに適用させたい設定ができます。
+Updating this script allows you to apply settings only to Vim on the container.
 
-デフォルトでは、以下の内容になっています。
-(ノーマルモードで `"*yy`, ヴィジュアルモードで `"*y` でホストへ `"` レジスタの内容を送信する)
-好みに応じて修正してください。
+The default behavior sends the contents of the `"` register to the host using `"*yy` in normal mode and `"*y` in visual mode.
+Adjust as desired.
+
+The default is as follows:
 
 ```vimrc
 if !has("nvim")
@@ -289,16 +295,17 @@ else
 endif
 ```
 
-また、デフォルトに戻したい場合には、 `-g` オプションで vimrc を再生成してください。
+To revert to the default, regenerate vimrc with the `-g` option.
 
 ```sh
 devcontainer.vim vimrc -g
 ```
 
-#### devcontainer.vim 上の Vim でのみ実行したい Vim script
+#### Vim script that should only be executed in Vim on devcontainer.vim
 
-devcontainer.vim 上で動く Vim には、 `g:devcontainer_vim` 変数が `v:true` で定義される。
-以下のように判定すれば、「devcontainer.vim 上で動く Vim のみで実行される Vim script」が記述できる。
+When Vim runs on devcontainer.vim, the `g:devcontainer_vim` variable is defined as `v:true`.
+
+By checking this variable, you can write Vim scripts that run only on Vim in devcontainer.vim.
 
 ```vim
 if get(g:, "devcontainer_vim", v:false)
@@ -307,30 +314,31 @@ endif
 ```
 
 
-### run サブコマンドの引数のカスタマイズ
+### Customize the arguments of `run` subcommand
 
-`devcontainer.vim runargs -o` で、 run サブコマンドへ暗黙的に設定される引数設定ファイルが開きます。
+`devcontainer.vim runargs -o` opens the argument settings file that is implicitly set to the run subcommand.
 
-このファイルを更新することで、暗黙的に適用させたい引数が指定できます。
+Updating this file allows you to specify arguments that you want to apply implicitly.
 
-デフォルトでは、以下の内容になっています。
-(カレントディレクトリを `/work` へマウントし、ワーキングディレクトリも同じ場所へ設定)
-好みに応じて修正してください。
+By default, it mounts the current directory to `/work` and sets the working directory to the same location. Adjust as desired.
+
+The default is as follows:
 
 ```
 -v "$(pwd):/work" -v "$HOME/.vim:/root/.vim" --workdir /work
 ```
 
-また、デフォルトに戻したい場合には、 `-g` オプションで runargs を再生成してください。
+To revert to the default, regenerate runargs with the `-g` option.
 
 ```sh
 devcontainer.vim runargs -g
 ```
 
-### NeoVim の利用
 
-「`--nvim` オプションを追加する」または、「環境変数 `DEVCONTAINER_VIM_TYPE` に `nvim` を設定する」
-ことで、 vim の代わりに nvim の AppImage を転送して起動します。
+### Using NeoVim
+
+By adding the `--nvim` option or setting the environment variable `DEVCONTAINER_VIM_TYPE` to `nvim`, the nvim AppImage will be transferred and launched instead of vim.
+
 
 ```sh
 devcontainer.vim --nvim start .
@@ -344,10 +352,10 @@ devcontainer.vim start .
 ```
 
 
-### シェルの利用
+### Using Shell
 
-「`--shell` オプションを追加する」または、「環境変数 `DEVCONTAINER_SHELL_TYPE` に使用するシェルを設定する」
-ことで、 vim の代わりにシェルを起動します。
+By adding the `--shell` option or setting the environment variable `DEVCONTAINER_SHELL_TYPE` to a shell name, the shell will be launched instead of vim.
+
 
 ```sh
 devcontainer.vim --shell bash start .
@@ -360,18 +368,19 @@ export DEVCONTAINER_SHELL_TYPE=bash
 devcontainer.vim start .
 ```
 
-その際に、転送した Vim/Neovim を tmux 上で使用したい場合には、`/VimRun.sh` を実行してください。
+If you want to use the transferred Vim/Neovim inside tmux, run `/VimRun.sh`.
 
 
 ## Migration:
 
 ### x.x.x to 3.5.1
 
-Docker Desktop を使用しない環境では、 `host.docker.internal` が使用できず、クリップボード連携が失敗していた。
-`start` コマンドでは、それを回避するための設定を `devcontainer.vim.json` に追加しなければいけない。
-v3.5.1 以降は、 `config -g` で生成されるひな形にコメントアウトした状態で記載されているが、 v3.5.1 よりもまえに生成した `devcontainer.vim.json` の場合、以下設定を追記してください。
+In environments where Docker Desktop is not used, `host.docker.internal` is unavailable, causing clipboard integration to fail.  
+To address this issue, you need to add specific settings to `devcontainer.vim.json` when using the `start` command.  
 
-これを追記することにより、 `host.docker.internal` が使えるようになり、クリップボード連携も正しく機能します。
+Starting from v3.5.1, this configuration is included as a commented-out template in the file generated by `config -g`. However, if your `devcontainer.vim.json` was generated prior to v3.5.1, please add the following settings:
+
+By adding this configuration, `host.docker.internal` becomes usable, and clipboard integration will work correctly.
 
 ```json
   "runArgs": [
@@ -381,7 +390,7 @@ v3.5.1 以降は、 `config -g` で生成されるひな形にコメントアウ
 
 ### 2.x.x to 3.x.x
 
-devcontainer.vim 2.x.x で Vim を利用しており、devcontainer.vim 3.x.x から NeoVim を利用する場合、`devcontainer.vim vimrc -o` で表示される vimrc のマッピングを削除するか、以下のように `if !has("nvim")` でマッピングを囲むかの対応をしてください。
+If you are using Vim with devcontainer.vim 2.x.x and will start using NeoVim with devcontainer.vim 3.x.x, you need either remove the vimrc mapping shown with `devcontainer.vim vimrc -o` or enclose the mapping with `if !has("nvim")`.
 
 ```vim
 if !has("nvim")
@@ -390,10 +399,11 @@ if !has("nvim")
 endif
 ```
 
+
 ### 3.1.0 to 3.2.0
 
-v3.2.0 から NeoVim でのクリップボード連携が使用可能となったため、
-Vim/NeoVim 両方を使用する場合、vimrc を以下のように書き換えてください。
+Clipboard integration with NeoVim has been available since v3.2.0,
+so if you use both Vim and NeoVim, please rewrite your vimrc as follows.
 
 ```vim
 if !has("nvim")
@@ -407,13 +417,13 @@ endif
 
 ## Limitation:
 
-- alpine 系のコンテナでは amd64 アーキテクチャは使用できません
-- aarch64 のコンテナで NeoVim を利用する場合はシステムインストールされたものを利用する必要があります
-- NeoVim AppImage が使えず、システムインストールの NeoVim も存在しない場合、 NeoVim の代わりに Vim が起動します
-- macOS で NeoVim を利用する場合は、システムインストールの NeoVim しか利用できません
-  システムインストールの NeoVim が検出できなかった場合、代わりに Vim が起動します
-- WSL2 の docker を利用している場合、クリップボード連携が動きません
-- Docker Desktop で WSL2 Integration を利用している場合、 `forwardPorts` が上手く動かないため、 `appPort` を使用してください
+- amd64 architecture cannot be used in alpine-based containers
+- When using NeoVim in an aarch64 container, you must use the system-installed version
+- If the NeoVim AppImage is not available and there is no system-installed NeoVim, Vim will start instead of NeoVim
+- When using NeoVim on macOS, only the system-installed NeoVim can be used
+  If the system-installed NeoVim cannot be detected, Vim will start instead
+- Clipboard integration doesn't work when using docker on WSL2
+- If you are using WSL2 Integration with Docker Desktop, `forwardPorts` may not work properly, so please use `appPort` instead.
 
 
 ## Install:
@@ -429,8 +439,8 @@ endif
 go install github.com/mikoto2000/devcontainer.vim/v3@latest
 ```
 
-バージョン指定でインストールしたい場合には、以下コマンドでインストールする。
-※ 設定不備で、バージョン指定でインストールできるのは v3.0.2 以降のみとなっている
+If you want to install by specifying the version, install with the following command.
+* Due to an incomplete setting, only v3.0.2 or later can be installed by specifying the version.
 
 ```sh
 go install github.com/mikoto2000/devcontainer.vim/v3@3.0.2
@@ -474,7 +484,7 @@ Copyright (C) 2025 mikoto2000
 
 This software is released under the MIT License, see LICENSE
 
-このソフトウェアは MIT ライセンスの下で公開されています。 LICENSE を参照してください。
+This software is published under the MIT License. See LICENSE.
 
 
 ## Author:
