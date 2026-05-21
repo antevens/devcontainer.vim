@@ -164,7 +164,11 @@ func transferVimFiles(containerID, configDir, vimrc string, noCdr bool, port int
 	}
 
 	// Transfer vimrc to the container
-	err = docker.Cp("vimrc", vimrc, containerID, "/")
+	resolvedVimrc, err := filepath.EvalSymlinks(vimrc)
+	if err != nil {
+		resolvedVimrc = vimrc
+	}
+	err = docker.Cp("vimrc", resolvedVimrc, containerID, "/vimrc")
 	if err != nil {
 		return sendToTCP, err
 	}
