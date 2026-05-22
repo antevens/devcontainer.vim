@@ -15,22 +15,22 @@ LD_FLAGS := "-s -w -X main.version=${VERSION}"
 DEST := ./build
 
 WATCH_SRC := ./main.go \
-						 ./devcontainer/DevcontainerJson.go \
+						 ./devcontainer/devcontainer_json.go \
 						 ./devcontainer/devcontainer.go \
 						 ./devcontainer/run.go \
 						 ./devcontainer/start.go \
-						 ./devcontainer/dockerRunVimArgs.go \
-						 ./devcontainer/devcontainerStartVimArgs.go \
-						 ./devcontainer/readConfigurationResult.go \
-						 ./devcontainer/upCommandResult.go \
+						 ./devcontainer/docker_run_vim_args.go \
+						 ./devcontainer/devcontainer_start_vim_args.go \
+						 ./devcontainer/read_configuration_result.go \
+						 ./devcontainer/up_command_result.go \
 						 ./devcontainer/run_vim_aarch64.template.sh \
 						 ./devcontainer/run_vim_system.template.sh \
 						 ./devcontainer/run_vim_x86_64_AppImage.template.sh \
 						 ./devcontainer/run_vim_x86_64_static.template.sh \
 						 ./docker/docker.go \
-						 ./docker/dockerPsResult.go \
-						 ./dockercompose/dockerCompose.go \
-						 ./dockercompose/dockerComposePsResult.go \
+						 ./docker/docker_ps_result.go \
+						 ./dockercompose/docker_compose.go \
+						 ./dockercompose/docker_compose_ps_result.go \
 						 ./tools/tools.go \
 						 ./tools/vim.go \
 						 ./tools/nvim.go \
@@ -38,9 +38,9 @@ WATCH_SRC := ./main.go \
 						 ./tools/devcontainer_darwin.go \
 						 ./tools/devcontainer_linux.go \
 						 ./tools/devcontainer_windows.go \
-						 ./tools/clipboard-data-receiver.go \
-						 ./tools/port-forwarder.go \
-						 ./util/port-forwarder.go \
+						 ./tools/clipboard_data_receiver.go \
+						 ./tools/port_forwarder.go \
+						 ./util/port_forwarder.go \
 						 ./util/util.go
 
 ### Development
