@@ -174,6 +174,7 @@ func main() {
 				os.Exit(0)
 			}
 
+			cli.ShowAppHelp(cCtx)
 			return nil
 		},
 		Commands: []*cli.Command{
