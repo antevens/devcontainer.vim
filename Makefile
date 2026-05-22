@@ -56,10 +56,10 @@ build-all:
 	@set -e; \
 	for platform in $(PLATFORMS); do \
 		GOOS=$${platform%/*}; GOARCH=$${platform#*/}; \
-		ext=""; [ $$GOOS = "windows" ] && ext=".exe"; \
-		out="$(DEST)/$(APP_NAME)-$${GOOS}-$${GOARCH}$$ext"; \
-		echo "Building $$out"; \
-		GOOS=$$GOOS GOARCH=$$GOARCH go build -ldflags "-s -w -X main.version=$(VERSION)" -o $$out $(PKG); \
+		ext=""; [ $${GOOS} = "windows" ] && ext=".exe"; \
+		out="$(DEST)/$(APP_NAME)-$${GOOS}-$${GOARCH}$${ext}"; \
+		echo "Building $${out}"; \
+		GOOS=$${GOOS} GOARCH=$${GOARCH} go build -ldflags "-s -w -X main.version=$(VERSION)" -o $${out} $(PKG); \
 	done
 
 

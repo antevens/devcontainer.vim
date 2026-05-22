@@ -8,11 +8,6 @@
   "mounts": [
     {
       "type": "bind",
-      "source": "${localEnv:HOME}/.vim",
-      "target": "/home/vscode/.vim"
-    },
-    {
-      "type": "bind",
       "source": "${localEnv:HOME}/.gitconfig",
       "target": "/home/vscode/.gitconfig"
     },

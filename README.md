@@ -88,10 +88,10 @@ GLOBAL OPTIONS:
 ```sh
 devcontainer.vim run [DOCKER_OPTIONS] [DOCKER_ARGS]
 ```
-Example of running a container in an environment equivalent to the `docker run -it --rm -v "$(pwd):/work" --workdir /work -v "$HOME/.vim:/root/.vim" --name golang golang:1.22.1-bookworm` command:
+Example of running a container in an environment equivalent to the `docker run -it --rm -v "$(pwd):/work" --workdir /work -v "${HOME}/.vim:/root/.vim" --name golang golang:1.22.1-bookworm` command:
 
 ```sh
-devcontainer.vim run -v "$(pwd):/work" --workdir /work -v "$HOME/.vim:/root/.vim" --name golang golang:1.22.1-bookworm
+devcontainer.vim run -v "$(pwd):/work" --workdir /work -v "${HOME}/.vim:/root/.vim" --name golang golang:1.22.1-bookworm
 ```
 
 
@@ -116,7 +116,7 @@ devcontainer.vim --notmux start .
 You can use arguments to `devcontainer` (except for `--workspace-folder`) as they are, so if you want to bind `.vim`, specify it as follows.
 
 ```sh
-devcontainer.vim start --mount "type=bind,source=$HOME/.vim,target=/root/.vim" .
+devcontainer.vim start --mount "type=bind,source=${HOME}/.vim,target=/root/.vim" .
 ```
 
 #### Environmental stop
@@ -325,7 +325,7 @@ By default, it mounts the current directory to `/work` and sets the working dire
 The default is as follows:
 
 ```
--v "$(pwd):/work" -v "$HOME/.vim:/root/.vim" --workdir /work
+-v "$(pwd):/work" -v "${HOME}/.vim:/root/.vim" --workdir /work
 ```
 
 To revert to the default, regenerate runargs with the `-g` option.
@@ -480,7 +480,7 @@ rm -rf ~/Library/Caches/devcontainer.vim
 
 ## License:
 
-Copyright (C) 2025 mikoto2000
+Copyright (C) 2025 mikoto2000 & Antonia Stevens
 
 This software is released under the MIT License, see LICENSE
 
@@ -490,3 +490,4 @@ This software is published under the MIT License. See LICENSE.
 ## Author:
 
 mikoto2000 <mikoto2000@gmail.com>
+Antonia Stevens <a@ant.st>

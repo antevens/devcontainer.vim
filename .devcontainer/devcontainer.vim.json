@@ -4,7 +4,7 @@
     "LESSCHARSET": "utf-8",
     "SHELL": "bash",
     "TERM": "xterm-256color",
-    //"OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
   },
   "runArgs": [
     "--add-host=host.docker.internal:host-gateway"
@@ -13,19 +13,14 @@
   "mounts": [
     {
       "type": "bind",
-      "source": "${localEnv:HOME}/.vim",
-      "target": "/home/vscode/.vim"
-    },
-    {
-      "type": "bind",
       "source": "${localEnv:HOME}/.gitconfig",
       "target": "/home/vscode/.gitconfig"
     },
-    {
-      "type": "bind",
-      "source": "${localEnv:HOME}/.ssh",
-      "target": "/home/vscode/.ssh"
-    },
+    //{
+    //  "type": "bind",
+    //  "source": "${localEnv:HOME}/.ssh",
+    //  "target": "/home/vscode/.ssh"
+    //},
     {
       "type": "bind",
       "source": "${localEnv:HOME}/.claude.json",
@@ -33,14 +28,19 @@
     },
     {
       "type": "bind",
-      "source": "${localEnv:HOME}/.gemini",
-      "target": "/home/vscode/.gemini"
+      "source": "${localEnv:HOME}/.claude",
+      "target": "/home/vscode/.claude"
     },
     {
       "type": "bind",
-      "source": "${localEnv:HOME}/.codex",
-      "target": "/home/vscode/.codex"
+      "source": "${localEnv:HOME}/.gemini",
+      "target": "/home/vscode/.gemini"
     },
+    //{
+    //  "type": "bind",
+    //  "source": "${localEnv:HOME}/.codex",
+    //  "target": "/home/vscode/.codex"
+    //},
   ],
   "features": {
     "ghcr.io/devcontainers/features/node:1": {}

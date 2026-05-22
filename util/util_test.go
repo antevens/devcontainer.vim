@@ -1,12 +1,13 @@
 package util
 
 import (
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
+	"os"
 	"path/filepath"
 	"testing"
-
-	"os"
 )
 
 func TestIsExistsCommandOk(t *testing.T) {
@@ -192,17 +193,22 @@ func TestCreateConfigFileForDevcontainer(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
+	expectedDir, err := GetConfigDir(configDirForDevcontainer, workspaceFolder)
+	if err != nil {
+		t.Fatalf("error getting config dir: %s", err)
+	}
+
 	defer func() {
-		os.RemoveAll("./test/resource/config/5ffc48ca73a1122ac36772801370c276/")
+		os.RemoveAll(expectedDir)
 	}()
 
 	// An MD5 hashed folder is created under the config directory
-	if !IsExists("./test/resource/config/5ffc48ca73a1122ac36772801370c276/") {
-		t.Fatal("config directory not found: ./test/resource/config/5ffc48ca73a1122ac36772801370c276/")
+	if !IsExists(expectedDir) {
+		t.Fatalf("config directory not found: %s", expectedDir)
 	}
 
-	if !IsExists("./test/resource/config/5ffc48ca73a1122ac36772801370c276/devcontainer.json") {
-		t.Fatal("config file not found: ./test/resource/config/5ffc48ca73a1122ac36772801370c276/")
+	if !IsExists(filepath.Join(expectedDir, "devcontainer.json")) {
+		t.Fatalf("config file not found in: %s", expectedDir)
 	}
 
 	bytes, err := os.ReadFile(mergedConfigFilePath)
@@ -237,7 +243,11 @@ func TestGetConfigDir(t *testing.T) {
 		t.Fatalf("error: %s", err)
 	}
 
-	want := "test/resource/TestGetConfigDir/config/c6f98b7a913a4e3c094b7ba70d2e0f00"
+	absPath, _ := filepath.Abs(workspaceFolder)
+	hash := md5.Sum([]byte(absPath))
+	hashStr := hex.EncodeToString(hash[:])
+	want := filepath.Join(configDir, hashStr)
+
 	if want != got {
 		t.Fatalf("error: want %s, but got %s", want, got)
 	}

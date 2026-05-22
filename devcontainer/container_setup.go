@@ -150,7 +150,7 @@ func setupVim(containerID, vimInstallDir string, nvim bool, containerArch string
 }
 
 // Transfer Vim files (SendToTcp.vim and vimrc) to the container
-func transferVimFiles(containerID, configDir, vimrc string, noCdr bool, port int, isNvim bool) (string, error) {
+func transferVimFiles(containerID, containerHome, configDir, vimrc string, noCdr bool, port int, isNvim bool) (string, error) {
 	// Transfer Vim-related files (SendToTcp.vim and additional vimrc)
 	sendToTCP, err := tools.CreateSendToTCP(configDir, port, noCdr, isNvim)
 	if err != nil {
@@ -158,20 +158,67 @@ func transferVimFiles(containerID, configDir, vimrc string, noCdr bool, port int
 	}
 
 	// Transfer SendToTcp.vim to the container
-	err = docker.Cp("SendToTcp.vim", sendToTCP, containerID, "/")
+	err = docker.Cp("SendToTcp.vim", sendToTCP, containerID, "/"+filepath.Base(sendToTCP))
 	if err != nil {
 		return sendToTCP, err
 	}
 
 	// Transfer vimrc to the container
-	resolvedVimrc, err := filepath.EvalSymlinks(vimrc)
-	if err != nil {
-		resolvedVimrc = vimrc
-	}
-	err = docker.Cp("vimrc", resolvedVimrc, containerID, "/vimrc")
+	err = docker.Cp("vimrc", vimrc, containerID, "/vimrc")
 	if err != nil {
 		return sendToTCP, err
 	}
 
+	err = transferDotVim(containerID, containerHome)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to transfer ~/.vim directory: %v\n", err)
+	}
+
 	return sendToTCP, nil
+}
+
+// Transfer ~/.vim directory into the container, dereferencing symlinks
+func transferDotVim(containerID string, containerHome string) error {
+	userHome, err := os.UserHomeDir()
+	if err != nil {
+		return err
+	}
+	dotVimSrc := filepath.Join(userHome, ".vim")
+
+	if _, err := os.Stat(dotVimSrc); os.IsNotExist(err) {
+		// Nothing to transfer if ~/.vim doesn't exist
+		return nil
+	}
+
+	// Create a temporary directory to resolve symlinks
+	tmpDir, err := os.MkdirTemp("", "devcontainer-vim-dotvim-*")
+	if err != nil {
+		return err
+	}
+	defer os.RemoveAll(tmpDir)
+
+	tmpDotVim := filepath.Join(tmpDir, ".vim")
+	err = util.CopyDirDereference(dotVimSrc, tmpDotVim)
+	if err != nil {
+		return err
+	}
+
+	if containerHome == "" {
+		// Fallback to docker exec if no explicit container home was provided
+		containerHomeRaw, err := docker.Exec(containerID, "sh", "-c", "echo ${HOME}")
+		if err != nil {
+			return err
+		}
+		containerHome = strings.TrimSpace(containerHomeRaw)
+		if containerHome == "" {
+			containerHome = "/root"
+		}
+	}
+
+	containerDotVim := containerHome + "/.vim"
+
+	// Transfer into container
+	// We append "/." to the source path so docker cp copies the contents into the target directory,
+	// rather than nesting it as ~/.vim/.vim if the directory already exists.
+	return docker.Cp("dotVim", tmpDotVim+"/.", containerID, containerDotVim)
 }

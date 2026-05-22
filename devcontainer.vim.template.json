@@ -32,25 +32,25 @@
   "mounts": [
     {
       "type": "bind",
-      "source": "${localEnv:HOME}/.vim",
-      "target": "{{ remoteEnv:HOME }}/.vim"
-    },
-    {
-      "type": "bind",
       "source": "${localEnv:HOME}/.gitconfig",
       "target": "{{ remoteEnv:HOME }}/.gitconfig"
     },
-    {
-      "type": "bind",
-      "source": "${localEnv:HOME}/.ssh",
-      "target": "{{ remoteEnv:HOME }}/.ssh"
-    },
-    // If use host's bashrc
     //{
     //  "type": "bind",
-    //  "source": "${localEnv:HOME}/.bashrc",
-    //  "target": "{{ remoteEnv:HOME }}/.bashrc"
+    //  "source": "${localEnv:HOME}/.ssh",
+    //  "target": "{{ remoteEnv:HOME }}/.ssh"
     //},
+    // If use host's bashrc
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.bashrc",
+      "target": "{{ remoteEnv:HOME }}/.bashrc"
+    },
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.bash_history",
+      "target": "{{ remoteEnv:HOME }}/.bash_history"
+    },
     // If use WSLG
     //{
     //  "type": "bind",
@@ -63,11 +63,16 @@
     //  "target": "/mnt/wslg"
     //},
     // If use claude code
-    //{
-    //  "type": "bind",
-    //  "source": "${localEnv:HOME}/.claude.json",
-    //  "target": "{{ remoteEnv:HOME }}/.claude.json"
-    //},
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.claude.json",
+      "target": "{{ remoteEnv:HOME }}/.claude.json"
+    },
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.claude",
+      "target": "{{ remoteEnv:HOME }}/.claude"
+    },
     // If use codex
     //{
     //  "type": "bind",
@@ -75,11 +80,11 @@
     //  "target": "{{ remoteEnv:HOME }}/.codex"
     //},
     // If use gemini
-    //{
-    //  "type": "bind",
-    //  "source": "${localEnv:HOME}/.gemini",
-    //  "target": "{{ remoteEnv:HOME }}/.gemini"
-    //},
+    {
+      "type": "bind",
+      "source": "${localEnv:HOME}/.gemini",
+      "target": "{{ remoteEnv:HOME }}/.gemini"
+    },
     // If use github copilot
     //{
     //  "type": "bind",

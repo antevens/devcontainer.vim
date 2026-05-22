@@ -1,7 +1,7 @@
 FROM mcr.microsoft.com/devcontainers/base:trixie
 LABEL maintainer "mikoto2000 <mikoto2000@gmail.com>"
 
-ENV PATH=$PATH:/usr/local/go/bin
+ENV PATH=${PATH}:/usr/local/go/bin
 
 RUN curl -fsSL https://dl.yarnpkg.com/debian/pubkey.gpg \
   | gpg --dearmor > /usr/share/keyrings/yarn-archive-keyring.gpg \

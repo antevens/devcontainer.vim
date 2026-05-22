@@ -81,7 +81,23 @@ func Rm(containerID string) error {
 }
 
 func Cp(tagForLog string, from string, containerID string, to string) error {
-	dockerCpArgs := []string{"cp", from, containerID + ":" + to}
+	resolvedFrom, err := filepath.EvalSymlinks(from)
+	if err != nil {
+		resolvedFrom = from
+	}
+
+	// Preserve the "/." suffix for docker cp semantics if it was provided
+	if strings.HasSuffix(from, string(filepath.Separator)+".") || strings.HasSuffix(from, "/.") {
+		if !strings.HasSuffix(resolvedFrom, string(filepath.Separator)+".") && !strings.HasSuffix(resolvedFrom, "/.") {
+			resolvedFrom = resolvedFrom + "/."
+		}
+	}
+
+	// Preemptively remove the destination inside the container ONLY if it is a symlink or regular file.
+	// We specifically avoid rm -rf to prevent wiping out a bind-mounted directory on the host.
+	exec.Command(containerCommand, "exec", "--user", "root", containerID, "rm", "-f", to).Run()
+
+	dockerCpArgs := []string{"cp", resolvedFrom, containerID + ":" + to}
 	fmt.Printf("Copy %s: `%s \"%s\"` ...", tagForLog, containerCommand, strings.Join(dockerCpArgs, "\" \""))
 	copyResult, err := exec.Command(containerCommand, dockerCpArgs...).CombinedOutput()
 	if err != nil {

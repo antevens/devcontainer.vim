@@ -298,7 +298,10 @@ func Start(
 	}
 
 	// 7. Transfer Vim files
-	sendToTCP, err := transferVimFiles(containerID, configDirForDevcontainer, vimrc, noCdr, port, vimFileName == "nvim")
+	containerHomeRaw, _ := Execute(devcontainerPath, "exec", "--workspace-folder", workspaceFolder, "sh", "-c", "echo ${HOME}")
+	containerHome := strings.TrimSpace(containerHomeRaw)
+
+	sendToTCP, err := transferVimFiles(containerID, containerHome, configDirForDevcontainer, vimrc, noCdr, port, vimFileName == "nvim")
 	if err != nil {
 		return err
 	}
