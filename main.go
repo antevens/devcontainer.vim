@@ -358,7 +358,33 @@ func main() {
 
 							// Use the end of the command line arguments as the value for --workspace-folder
 							args := cCtx.Args().Slice()
+							if len(args) == 0 {
+								fmt.Fprintf(os.Stderr, "Error: missing workspace folder.\n")
+								fmt.Fprintf(os.Stderr, "Usage: devcontainer.vim templates apply <WORKSPACE_FOLDER>\n")
+								os.Exit(1)
+							}
 							workspaceFolder := args[len(args)-1]
+
+							// Resolve to absolute path to support both relative and absolute paths
+							absWorkspaceFolder, err := filepath.Abs(workspaceFolder)
+							if err != nil {
+								fmt.Fprintf(os.Stderr, "Error resolving workspace folder path: %v\n", err)
+								os.Exit(1)
+							}
+							info, err := os.Stat(absWorkspaceFolder)
+							if err != nil {
+								if errors.Is(err, os.ErrNotExist) {
+									fmt.Fprintf(os.Stderr, "Error: workspace folder does not exist: %s\n", workspaceFolder)
+								} else {
+									fmt.Fprintf(os.Stderr, "Error accessing workspace folder: %v\n", err)
+								}
+								os.Exit(1)
+							}
+							if !info.IsDir() {
+								fmt.Fprintf(os.Stderr, "Error: workspace folder is not a directory: %s\n", workspaceFolder)
+								os.Exit(1)
+							}
+							workspaceFolder = absWorkspaceFolder
 
 							templateID := selectedItem.ID + ":" + selectedItem.Version
 
