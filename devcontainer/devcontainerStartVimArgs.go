@@ -18,7 +18,7 @@ func buildDevcontainerStartVimExecArgs(containerID string, workspaceFolder strin
 	}
 
 	if shell == "" {
-		return append(args, "/VimRun.sh")
+		return append(args, "/run_vim.sh")
 	}
 
 	return append(args, shell)
@@ -39,16 +39,16 @@ func devcontainerStartVimArgs(containerID string, workspaceFolder string, vimFil
 	var templateSource string
 	var err error
 	if useSystemVim {
-		templateSource = vimRunX8664System
+		templateSource = runVimX8664System
 	} else {
 		if containerArch == "amd64" {
 			if runtime.GOOS != "darwin" {
-				templateSource = vimRunX8664AppImage
+				templateSource = runVimX8664AppImage
 			} else {
-				templateSource = vimRunX8664Static
+				templateSource = runVimX8664Static
 			}
 		} else {
-			templateSource = vimRunAarch64
+			templateSource = runVimAarch64
 		}
 	}
 
@@ -67,14 +67,14 @@ func devcontainerStartVimArgs(containerID string, workspaceFolder string, vimFil
 	}
 
 	// Output Vim launch script
-	vimLaunchScript := filepath.Join(configDirForDevcontainer, "VimRun.sh")
+	vimLaunchScript := filepath.Join(configDirForDevcontainer, "run_vim.sh")
 	os.RemoveAll(vimLaunchScript)
 	err = os.WriteFile(vimLaunchScript, []byte(vimRunScript), 0766)
 	if err != nil {
 		return nil, err
 	}
 
-	docker.Cp("Vim launch script", vimLaunchScript, containerID, "/VimRun.sh")
+	docker.Cp("Vim launch script", vimLaunchScript, containerID, "/run_vim.sh")
 
 	return buildDevcontainerStartVimExecArgs(containerID, workspaceFolder, shell), nil
 }

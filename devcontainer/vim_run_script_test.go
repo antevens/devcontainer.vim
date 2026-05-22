@@ -6,7 +6,7 @@ import (
 )
 
 func TestRenderVimRunScriptWrapsWithTmux(t *testing.T) {
-	script, err := renderVimRunScript(vimRunX8664System, vimRunScriptParams{
+	script, err := renderVimRunScript(runVimX8664System, vimRunScriptParams{
 		VimFileName: "vim",
 		SendToTcp:   "SendToTcp.vim",
 		UseTmux:     true,
@@ -25,7 +25,7 @@ func TestRenderVimRunScriptWrapsWithTmux(t *testing.T) {
 }
 
 func TestRenderVimRunScriptWithoutTmux(t *testing.T) {
-	script, err := renderVimRunScript(vimRunX8664System, vimRunScriptParams{
+	script, err := renderVimRunScript(runVimX8664System, vimRunScriptParams{
 		VimFileName: "vim",
 		SendToTcp:   "SendToTcp.vim",
 		UseTmux:     false,

@@ -188,7 +188,7 @@ func transferVimFiles(containerID, containerHome, configDir, vimrc string, noCdr
 }
 
 func transferDereferencedMount(containerID string, containerHome string, sourceRaw string, targetRaw string) error {
-	sourceExpanded, err := util.ExtractShellVariables("echo " + strings.ReplaceAll(sourceRaw, "${localEnv:HOME}", "$HOME"))
+	sourceExpanded, err := util.ExtractShellVariables(strings.ReplaceAll(sourceRaw, "${localEnv:HOME}", "$HOME"))
 	if err != nil {
 		sourceExpanded = sourceRaw
 	}

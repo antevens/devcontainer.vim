@@ -17,17 +17,17 @@ import (
 	"github.com/mikoto2000/devcontainer.vim/v3/util"
 )
 
-//go:embed VimRun_system.template.sh
-var vimRunX8664System string
+//go:embed run_vim_system.template.sh
+var runVimX8664System string
 
-//go:embed VimRun_x86_64_AppImage.template.sh
-var vimRunX8664AppImage string
+//go:embed run_vim_x86_64_AppImage.template.sh
+var runVimX8664AppImage string
 
-//go:embed VimRun_x86_64_static.template.sh
-var vimRunX8664Static string
+//go:embed run_vim_x86_64_static.template.sh
+var runVimX8664Static string
 
-//go:embed VimRun_aarch64.template.sh
-var vimRunAarch64 string
+//go:embed run_vim_aarch64.template.sh
+var runVimAarch64 string
 
 const containerCommand = "docker"
 

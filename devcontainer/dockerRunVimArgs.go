@@ -18,7 +18,7 @@ func buildDockerRunVimExecArgs(containerID string, shell string) []string {
 			dockerDetachKeys,
 			"-it",
 			containerID,
-			"/VimRun.sh",
+			"/run_vim.sh",
 		}
 	}
 
@@ -46,16 +46,16 @@ func dockerRunVimArgs(containerID string, vimFileName string, tmuxFileName strin
 	var templateSource string
 	var err error
 	if useSystemVim {
-		templateSource = vimRunX8664System
+		templateSource = runVimX8664System
 	} else {
 		if containerArch == "amd64" {
 			if runtime.GOOS != "darwin" {
-				templateSource = vimRunX8664AppImage
+				templateSource = runVimX8664AppImage
 			} else {
-				templateSource = vimRunX8664Static
+				templateSource = runVimX8664Static
 			}
 		} else {
-			templateSource = vimRunAarch64
+			templateSource = runVimAarch64
 		}
 	}
 
@@ -74,14 +74,14 @@ func dockerRunVimArgs(containerID string, vimFileName string, tmuxFileName strin
 	}
 
 	// Output Vim launch script
-	vimLaunchScript := filepath.Join(configFilePath, "VimRun.sh")
+	vimLaunchScript := filepath.Join(configFilePath, "run_vim.sh")
 	os.RemoveAll(vimLaunchScript)
 	err = os.WriteFile(vimLaunchScript, []byte(vimRunScript), 0766)
 	if err != nil {
 		return nil, err
 	}
 
-	docker.Cp("Vim launch script", vimLaunchScript, containerID, "/VimRun.sh")
+	docker.Cp("Vim launch script", vimLaunchScript, containerID, "/run_vim.sh")
 
 	return buildDockerRunVimExecArgs(containerID, shell), nil
 }

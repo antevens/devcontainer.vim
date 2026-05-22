@@ -370,7 +370,7 @@ export DEVCONTAINER_SHELL_TYPE=bash
 devcontainer.vim start .
 ```
 
-If you want to use the transferred Vim/Neovim inside tmux, run `/VimRun.sh`.
+If you want to use the transferred Vim/Neovim inside tmux, run `/run_vim.sh`.
 
 
 ## Migration:
