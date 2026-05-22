@@ -41,7 +41,7 @@ func TestStart(t *testing.T) {
 	}
 
 	// Use the end of the command line arguments as the value for --workspace-folder
-	configFilePath, err := CreateConfigFile(devcontainerPath, "../test/project/TestStart", configDirForDevcontainer)
+	configFilePath, _, err := CreateConfigFile(devcontainerPath, "../test/project/TestStart", configDirForDevcontainer)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			t.Skipf("Configuration file not found: %v", err)
@@ -57,7 +57,7 @@ func TestStart(t *testing.T) {
 	// Start the container using devcontainer
 	noCdr := false
 	noPf := false
-	err = Start(TestDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, false, cdrPath, binDir, nvim, "", configFilePath, "../test/resource/TestStart/vimrc")
+	err = Start(TestDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, false, cdrPath, binDir, nvim, "", configFilePath, "../test/resource/TestStart/vimrc", []map[string]interface{}{})
 	if err != nil {
 		if errors.Is(err, os.ErrPermission) {
 			t.Skipf("Permission error: %v", err)
@@ -142,7 +142,7 @@ func TestStartWithDockerCompose(t *testing.T) {
 	cdrPath := requireTestBinary(t, "clipboard-data-receiver")
 
 	// Use the end of the command line arguments as the value for --workspace-folder
-	configFilePath, err := CreateConfigFile(devcontainerPath, ".", configDirForDevcontainer)
+	configFilePath, _, err := CreateConfigFile(devcontainerPath, ".", configDirForDevcontainer)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			t.Skipf("Configuration file not found: %v", err)
@@ -158,7 +158,7 @@ func TestStartWithDockerCompose(t *testing.T) {
 	// Start the container using devcontainer
 	noCdr := false
 	noPf := false
-	err = Start(TestDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, false, cdrPath, binDir, nvim, "", configFilePath, "../../resource/TestStartWithDockerCompose/vimrc")
+	err = Start(TestDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, false, cdrPath, binDir, nvim, "", configFilePath, "../../resource/TestStartWithDockerCompose/vimrc", []map[string]interface{}{})
 	if err != nil {
 		if errors.Is(err, os.ErrPermission) {
 			t.Skipf("Permission error: %v", err)

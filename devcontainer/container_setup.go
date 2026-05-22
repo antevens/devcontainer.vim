@@ -150,7 +150,7 @@ func setupVim(containerID, vimInstallDir string, nvim bool, containerArch string
 }
 
 // Transfer Vim files (SendToTcp.vim and vimrc) to the container
-func transferVimFiles(containerID, containerHome, configDir, vimrc string, noCdr bool, port int, isNvim bool) (string, error) {
+func transferVimFiles(containerID, containerHome, configDir, vimrc string, noCdr bool, port int, isNvim bool, dereferencedMounts []map[string]interface{}) (string, error) {
 	// Transfer Vim-related files (SendToTcp.vim and additional vimrc)
 	sendToTCP, err := tools.CreateSendToTCP(configDir, port, noCdr, isNvim)
 	if err != nil {
@@ -169,56 +169,64 @@ func transferVimFiles(containerID, containerHome, configDir, vimrc string, noCdr
 		return sendToTCP, err
 	}
 
-	err = transferDotVim(containerID, containerHome)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Warning: failed to transfer ~/.vim directory: %v\n", err)
+	for _, mount := range dereferencedMounts {
+		sourceRaw, okSource := mount["source"].(string)
+		targetRaw, okTarget := mount["target"].(string)
+
+		if !okSource || !okTarget {
+			fmt.Fprintf(os.Stderr, "Warning: invalid dereferenced mount format: %v\n", mount)
+			continue
+		}
+
+		err = transferDereferencedMount(containerID, containerHome, sourceRaw, targetRaw)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Warning: failed to transfer dereferenced mount %s -> %s: %v\n", sourceRaw, targetRaw, err)
+		}
 	}
 
 	return sendToTCP, nil
 }
 
-// Transfer ~/.vim directory into the container, dereferencing symlinks
-func transferDotVim(containerID string, containerHome string) error {
-	userHome, err := os.UserHomeDir()
+func transferDereferencedMount(containerID string, containerHome string, sourceRaw string, targetRaw string) error {
+	sourceExpanded, err := util.ExtractShellVariables("echo " + strings.ReplaceAll(sourceRaw, "${localEnv:HOME}", "$HOME"))
 	if err != nil {
-		return err
+		sourceExpanded = sourceRaw
 	}
-	dotVimSrc := filepath.Join(userHome, ".vim")
+	sourceExpanded = strings.TrimSpace(sourceExpanded)
 
-	if _, err := os.Stat(dotVimSrc); os.IsNotExist(err) {
-		// Nothing to transfer if ~/.vim doesn't exist
+	targetExpanded := strings.ReplaceAll(targetRaw, "{{ remoteEnv:HOME }}", containerHome)
+
+	if _, err := os.Stat(sourceExpanded); os.IsNotExist(err) {
 		return nil
 	}
 
-	// Create a temporary directory to resolve symlinks
-	tmpDir, err := os.MkdirTemp("", "devcontainer-vim-dotvim-*")
-	if err != nil {
-		return err
-	}
-	defer os.RemoveAll(tmpDir)
-
-	tmpDotVim := filepath.Join(tmpDir, ".vim")
-	err = util.CopyDirDereference(dotVimSrc, tmpDotVim)
+	realPath, err := filepath.EvalSymlinks(sourceExpanded)
 	if err != nil {
 		return err
 	}
 
-	if containerHome == "" {
-		// Fallback to docker exec if no explicit container home was provided
-		containerHomeRaw, err := docker.Exec(containerID, "sh", "-c", "echo ${HOME}")
+	fileInfo, err := os.Stat(realPath)
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.IsDir() {
+		tmpDir, err := os.MkdirTemp("", "devcontainer-vim-transfer-*")
 		if err != nil {
 			return err
 		}
-		containerHome = strings.TrimSpace(containerHomeRaw)
-		if containerHome == "" {
-			containerHome = "/root"
+		defer os.RemoveAll(tmpDir)
+
+		dirName := filepath.Base(realPath)
+		tmpSrc := filepath.Join(tmpDir, dirName)
+		err = util.CopyDirDereference(realPath, tmpSrc)
+		if err != nil {
+			return err
 		}
+
+		return docker.Cp("derefMountDir", tmpSrc+"/.", containerID, targetExpanded)
 	}
 
-	containerDotVim := containerHome + "/.vim"
-
-	// Transfer into container
-	// We append "/." to the source path so docker cp copies the contents into the target directory,
-	// rather than nesting it as ~/.vim/.vim if the directory already exists.
-	return docker.Cp("dotVim", tmpDotVim+"/.", containerID, containerDotVim)
+	return docker.Cp("derefMountFile", realPath, containerID, targetExpanded)
 }
+

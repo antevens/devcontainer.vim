@@ -360,14 +360,14 @@ func ExecuteCombineOutput(devcontainerFilePath string, args ...string) (string, 
 // Create the configuration file used when starting devcontainer.vim
 // The configuration file is stored in the config directory within the devcontainer.vim cache,
 // in a directory named after the md5 hash of the workspace folder path.
-func CreateConfigFile(devcontainerPath string, workspaceFolder string, configDirForDevcontainer string) (string, error) {
+func CreateConfigFile(devcontainerPath string, workspaceFolder string, configDirForDevcontainer string) (string, []map[string]interface{}, error) {
 	// Get devcontainer configuration file path
 	configFilePath, err := GetConfigurationFilePath(devcontainerPath, workspaceFolder)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
-			return "", fmt.Errorf("configuration file not found: %w", err)
+			return "", nil, fmt.Errorf("configuration file not found: %w", err)
 		}
-		return "", err
+		return "", nil, err
 	}
 
 	// Search for additional configuration file for devcontainer.vim
@@ -375,15 +375,15 @@ func CreateConfigFile(devcontainerPath string, workspaceFolder string, configDir
 	additionalConfigurationFilePath := configurationFileName + ".vim.json"
 
 	// Place JSON in the configuration management folder
-	mergedConfigFilePath, err := util.CreateConfigFileForDevcontainer(configDirForDevcontainer, workspaceFolder, configFilePath, additionalConfigurationFilePath)
+	mergedConfigFilePath, dereferencedMounts, err := util.CreateConfigFileForDevcontainer(configDirForDevcontainer, workspaceFolder, configFilePath, additionalConfigurationFilePath)
 	if err != nil {
 		if errors.Is(err, os.ErrPermission) {
-			return "", fmt.Errorf("permission error: %w", err)
+			return "", nil, fmt.Errorf("permission error: %w", err)
 		}
-		return "", err
+		return "", nil, err
 	}
 
 	fmt.Printf("Use configuration file: `%s`", mergedConfigFilePath)
 
-	return mergedConfigFilePath, err
+	return mergedConfigFilePath, dereferencedMounts, err
 }

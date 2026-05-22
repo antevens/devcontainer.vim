@@ -25,7 +25,7 @@ func TestCreateConfigFile(t *testing.T) {
 	}
 
 	workspaceFolder := "./test/project/TestCreateConfigFile"
-	configFilePath, err := devcontainer.CreateConfigFile(devcontainerPath, workspaceFolder, configDirForDevcontainer)
+	configFilePath, _, err := devcontainer.CreateConfigFile(devcontainerPath, workspaceFolder, configDirForDevcontainer)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
 			t.Skipf("configuration file not found: %v", err)

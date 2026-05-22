@@ -171,10 +171,41 @@ func ParseJwcc(jwccPath string) ([]byte, error) {
 	return parsedJSON.Pack(), nil
 }
 
+// ExtractDereferencedMounts takes devcontainer.json content, extracts mounts with type="dereferenced",
+// removes them from the JSON, and returns the modified JSON bytes and the extracted mounts.
+func ExtractDereferencedMounts(jsonBytes []byte) ([]byte, []map[string]interface{}, error) {
+	parsedJSON, err := gabs.ParseJSON(jsonBytes)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	var extractedMounts []map[string]interface{}
+	var remainingMounts []interface{}
+
+	mountsPath := "mounts"
+	if parsedJSON.ExistsP(mountsPath) {
+		mounts := parsedJSON.Path(mountsPath).Children()
+		if mounts != nil {
+			for _, mount := range mounts {
+				if mountType, ok := mount.Path("type").Data().(string); ok && mountType == "dereferenced" {
+					if mData, ok := mount.Data().(map[string]interface{}); ok {
+						extractedMounts = append(extractedMounts, mData)
+					}
+				} else {
+					remainingMounts = append(remainingMounts, mount.Data())
+				}
+			}
+			parsedJSON.SetP(remainingMounts, mountsPath)
+		}
+	}
+
+	return parsedJSON.Bytes(), extractedMounts, nil
+}
+
 // Merge configFilePath and additionalConfigFilePath JSON,
 // and store it in the configuration file storage directory within the devcontainer.vim cache directory.
-// Return the path to the directory containing the created devcontainer.json.
-func CreateConfigFileForDevcontainer(configDirForDevcontainer string, workspaceFolder string, configFilePath string, additionalConfigFilePath string) (string, error) {
+// Return the path to the directory containing the created devcontainer.json, and the extracted dereferenced mounts.
+func CreateConfigFileForDevcontainer(configDirForDevcontainer string, workspaceFolder string, configFilePath string, additionalConfigFilePath string) (string, []map[string]interface{}, error) {
 
 	// Determine if merging is necessary and construct the final JSON content
 	var configFileContent []byte
@@ -187,25 +218,32 @@ func CreateConfigFileForDevcontainer(configDirForDevcontainer string, workspaceF
 		configFileContent, err = os.ReadFile(configFilePath)
 	}
 	if err != nil {
-		return "", err
+		return "", nil, err
+	}
+
+	// Extract dereferenced mounts and remove them from the JSON content
+	configFileContent, dereferencedMounts, err := ExtractDereferencedMounts(configFileContent)
+	if err != nil {
+		return "", nil, err
 	}
 
 	// Place JSON in the configuration management folder
 	generateConfigDir, err := GetConfigDir(configDirForDevcontainer, workspaceFolder)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	generateConfigFilePath := filepath.Join(generateConfigDir, "devcontainer.json")
 	err = os.MkdirAll(generateConfigDir, 0777)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	err = os.WriteFile(generateConfigFilePath, configFileContent, 0666)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
-	return generateConfigFilePath, nil
+	return generateConfigFilePath, dereferencedMounts, nil
 }
+
 
 // Calculate and return the storage directory for devcontainer.json for devcontainer.vim.
 // Returns the directory `<devcontainer.vim cache directory>/config/<md5 hashed absolute path of workspaceFolder>`

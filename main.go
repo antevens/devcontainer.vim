@@ -433,7 +433,7 @@ func main() {
 						os.Exit(1)
 					}
 					workspaceFolder := args[len(args)-1]
-					configFilePath, err := devcontainer.CreateConfigFile(devcontainerPath, workspaceFolder, configDirForDevcontainer)
+					configFilePath, dereferencedMounts, err := devcontainer.CreateConfigFile(devcontainerPath, workspaceFolder, configDirForDevcontainer)
 					if err != nil {
 						if errors.Is(err, os.ErrNotExist) {
 							fmt.Fprintf(os.Stderr, "Configuration file not found: %v\n", err)
@@ -444,7 +444,7 @@ func main() {
 					}
 
 					// Start the container using devcontainer
-					err = devcontainer.Start(devcontainer.DefaultDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, noTmux, cdrPath, binDir, nvim, shell, configFilePath, vimrc)
+					err = devcontainer.Start(devcontainer.DefaultDevcontainerStartUseService{}, args, devcontainerPath, noCdr, noPf, noTmux, cdrPath, binDir, nvim, shell, configFilePath, vimrc, dereferencedMounts)
 					if err != nil {
 						if errors.Is(err, os.ErrPermission) {
 							fmt.Fprintf(os.Stderr, "Permission error: %v\n", err)

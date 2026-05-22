@@ -42,7 +42,7 @@ func TestStartStepByStep(t *testing.T) {
 		devcontainerPath := requireTestBinary(t, "devcontainer")
 
 		// Check if configuration files can be created
-		configFilePath, err := CreateConfigFile(devcontainerPath, "../test/project/TestStart", configDirForDevcontainer)
+		configFilePath, _, err := CreateConfigFile(devcontainerPath, "../test/project/TestStart", configDirForDevcontainer)
 		if err != nil {
 			// Skip if devcontainer command fails
 			if strings.Contains(err.Error(), "failed to parse") {

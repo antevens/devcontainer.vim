@@ -62,14 +62,19 @@
     //  "source": "/mnt/wslg",
     //  "target": "/mnt/wslg"
     //},
+    {
+      "type": "dereferenced",
+      "source": "${localEnv:HOME}/.vim",
+      "target": "{{ remoteEnv:HOME }}/.vim"
+    },
     // If use claude code
     {
-      "type": "bind",
+      "type": "dereferenced",
       "source": "${localEnv:HOME}/.claude.json",
       "target": "{{ remoteEnv:HOME }}/.claude.json"
     },
     {
-      "type": "bind",
+      "type": "dereferenced",
       "source": "${localEnv:HOME}/.claude",
       "target": "{{ remoteEnv:HOME }}/.claude"
     },

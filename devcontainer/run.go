@@ -213,7 +213,7 @@ func setupContainer(
 	}
 
 	// 6. Transfer Vim files
-	sendToTCP, err := transferVimFiles(containerID, "", configDirForDocker, vimrc, noCdr, port, vimFileName == "nvim")
+	sendToTCP, err := transferVimFiles(containerID, "", configDirForDocker, vimrc, noCdr, port, vimFileName == "nvim", []map[string]interface{}{})
 	if err != nil {
 		return containerID, vimFileName, tmuxFileName, sendToTCP, containerArch, useSystemVim, useSystemTmux, pid, configDirForCdr, err
 	}

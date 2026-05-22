@@ -188,7 +188,7 @@ func TestCreateConfigFileForDevcontainer(t *testing.T) {
 	configFilePath := "test/resource/TestCreateConfigFileForDevcontainer/.devcontainer/devcontainer.json"
 	additionalConfigFilePath := "test/resource/TestCreateConfigFileForDevcontainer/.devcontainer/devcontainer.vim.json"
 
-	mergedConfigFilePath, err := CreateConfigFileForDevcontainer(configDirForDevcontainer, workspaceFolder, configFilePath, additionalConfigFilePath)
+	mergedConfigFilePath, _, err := CreateConfigFileForDevcontainer(configDirForDevcontainer, workspaceFolder, configFilePath, additionalConfigFilePath)
 	if err != nil {
 		t.Fatalf("error: %s", err)
 	}

@@ -238,7 +238,8 @@ func Start(
 	nvim bool,
 	shell string,
 	configFilePath string,
-	vimrc string) error {
+	vimrc string,
+	dereferencedMounts []map[string]interface{}) error {
 
 	// Use the end of the command line arguments as the value for --workspace-folder
 	workspaceFolder := args[len(args)-1]
@@ -297,11 +298,11 @@ func Start(
 		}
 	}
 
-	// 7. Transfer Vim files
+	// 7. Transfer Vim files and Dereferenced mounts
 	containerHomeRaw, _ := Execute(devcontainerPath, "exec", "--workspace-folder", workspaceFolder, "sh", "-c", "echo ${HOME}")
 	containerHome := strings.TrimSpace(containerHomeRaw)
 
-	sendToTCP, err := transferVimFiles(containerID, containerHome, configDirForDevcontainer, vimrc, noCdr, port, vimFileName == "nvim")
+	sendToTCP, err := transferVimFiles(containerID, containerHome, configDirForDevcontainer, vimrc, noCdr, port, vimFileName == "nvim", dereferencedMounts)
 	if err != nil {
 		return err
 	}
