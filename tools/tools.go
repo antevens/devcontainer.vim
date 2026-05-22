@@ -212,13 +212,13 @@ func InstallDownTools(installDir string) (string, error) {
 // SelfUpdate downloads the latest release of devcontainer.vim from GitHub and replaces the current binary
 func SelfUpdate(services InstallerUseServices) error {
 	// Get the latest release tag name from GitHub
-	latestTagName, err := services.GetLatestReleaseFromGitHub("mikoto2000", "devcontainer.vim")
+	latestTagName, err := services.GetLatestReleaseFromGitHub("antevens", "devcontainer.vim")
 	if err != nil {
 		return err
 	}
 
 	// Construct the download URL for the latest release
-	downloadURL := fmt.Sprintf("https://github.com/mikoto2000/devcontainer.vim/releases/download/%s/devcontainer.vim-%s-%s", latestTagName, runtime.GOOS, runtime.GOARCH)
+	downloadURL := fmt.Sprintf("https://github.com/antevens/devcontainer.vim/releases/download/%s/devcontainer.vim-%s-%s", latestTagName, runtime.GOOS, runtime.GOARCH)
 	if runtime.GOOS == "windows" {
 		downloadURL = downloadURL + ".exe"
 	}
