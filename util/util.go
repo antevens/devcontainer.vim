@@ -227,6 +227,10 @@ func CreateConfigFileForDevcontainer(configDirForDevcontainer string, workspaceF
 		return "", nil, err
 	}
 
+	// Replace placeholders with default values if they are still present
+	configFileContentString := strings.ReplaceAll(string(configFileContent), "{{ remoteEnv:HOME }}", "/home/vscode")
+	configFileContent = []byte(configFileContentString)
+
 	// Place JSON in the configuration management folder
 	generateConfigDir, err := GetConfigDir(configDirForDevcontainer, workspaceFolder)
 	if err != nil {

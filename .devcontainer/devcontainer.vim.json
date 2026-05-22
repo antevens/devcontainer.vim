@@ -14,43 +14,43 @@
     {
       "type": "bind",
       "source": "${localEnv:HOME}/.gitconfig",
-      "target": "{{ remoteEnv:HOME }}/.gitconfig"
+      "target": "/home/vscode/.gitconfig"
     },
     //{
     //  "type": "bind",
     //  "source": "${localEnv:HOME}/.ssh",
-    //  "target": "{{ remoteEnv:HOME }}/.ssh"
+    //  "target": "/home/vscode/.ssh"
     //},
     // If use host's bashrc
     {
       "type": "bind",
       "source": "${localEnv:HOME}/.bashrc",
-      "target": "{{ remoteEnv:HOME }}/.bashrc"
+      "target": "/home/vscode/.bashrc"
     },
     {
       "type": "bind",
       "source": "${localEnv:HOME}/.bash_history",
-      "target": "{{ remoteEnv:HOME }}/.bash_history"
+      "target": "/home/vscode/.bash_history"
     },
     {
       "type": "dereferenced",
       "source": "${localEnv:HOME}/.vim",
-      "target": "{{ remoteEnv:HOME }}/.vim"
+      "target": "/home/vscode/.vim"
     },
     {
-      "type": "dereferenced",
+      "type": "bind",
       "source": "${localEnv:HOME}/.claude.json",
-      "target": "{{ remoteEnv:HOME }}/.claude.json"
+      "target": "/home/vscode/.claude.json"
     },
     {
-      "type": "dereferenced",
+      "type": "bind",
       "source": "${localEnv:HOME}/.claude",
-      "target": "{{ remoteEnv:HOME }}/.claude"
+      "target": "/home/vscode/.claude"
     },
     {
       "type": "bind",
       "source": "${localEnv:HOME}/.gemini",
-      "target": "{{ remoteEnv:HOME }}/.gemini"
+      "target": "/home/vscode/.gemini"
     }
   ],
   "features": {
