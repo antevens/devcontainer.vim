@@ -21,3 +21,7 @@
 - Use defer to ensure resource cleanup
 - Use interface-based design for testability
 - Platform-specific code: runtime checks and separate files as needed
+- The user requires to keyword based function definitions in shell scripts.
+- The user requires the google shell style guide for shell scripts.
+- The user prefers all internal variables in shell scripts be lower case but all external/environment variables be upper case.
+- The user prefers all shell scripts pass a shellcheck syntax check.
