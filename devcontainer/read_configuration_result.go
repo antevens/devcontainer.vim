@@ -103,6 +103,33 @@ func GetConfigFilePath(readConfigurationCommandResult string) (string, error) {
 	return result.Configuration.ConfigFilePath.FsPath, nil
 }
 
+// remoteHomeFromUser derives the home directory for a container user.
+// root gets /root; every other user gets /home/<user>.
+func remoteHomeFromUser(user string) string {
+	if user == "root" {
+		return "/root"
+	}
+	return "/home/" + user
+}
+
+// GetRemoteHome parses the JSON output of `devcontainer read-configuration`
+// and returns the container home directory. Falls back to /home/vscode when
+// remoteUser is absent or the JSON is invalid.
+func GetRemoteHome(readConfigurationResult string) string {
+	var parsed struct {
+		Configuration struct {
+			RemoteUser string `json:"remoteUser"`
+		} `json:"configuration"`
+	}
+	if err := json.Unmarshal([]byte(readConfigurationResult), &parsed); err != nil {
+		return "/home/vscode"
+	}
+	if parsed.Configuration.RemoteUser == "" {
+		return "/home/vscode"
+	}
+	return remoteHomeFromUser(parsed.Configuration.RemoteUser)
+}
+
 func UnmarshalReadConfigurationCommandResult(data []byte) (ReadConfigurationCommandResult, error) {
 	var result ReadConfigurationCommandResult
 

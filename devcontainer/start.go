@@ -307,7 +307,14 @@ func Start(
 		return err
 	}
 
-	// 8. Connect to the container
+	// 8. Watch dereferenced mounts for changes and sync them into the running container
+	if len(dereferencedMounts) > 0 {
+		watchCtx, watchCancel := context.WithCancel(context.Background())
+		defer watchCancel()
+		go watchDereferencedMounts(watchCtx, containerID, containerHome, dereferencedMounts)
+	}
+
+	// 9. Connect to the container
 	err = services.StartVim(containerID, devcontainerPath, workspaceFolder, vimFileName, tmuxFileName, sendToTCP, containerArch, useSystemVim, useSystemTmux, noTmux, shell, configDirForDevcontainer)
 	if pfCancel != nil {
 		pfCancel()
