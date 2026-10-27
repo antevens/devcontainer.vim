@@ -1,5 +1,8 @@
 # devcontainer.vim
 
+
+DEPRECATED, replaced with https://github.com/antevens/devc
+
 A tool for developing with Vim on a container. (Vim version of VSCode Dev Container)
 
 It's a tool that adds and starts settings for Vim-based Dev Container development in the form of additions to the `devcontainer.json` file created for VSCode.
@@ -62,6 +65,7 @@ COMMANDS:
    templates           Run `devcontainer templates`
    start               Run `devcontainer up` and `devcontainer exec`
    stop                Stop devcontainers.
+   update              Re-run lifecycle commands to update dependencies in a running container.
    down                Stop and remove devcontainers.
    config              devcontainer.vim's config information.
    vimrc               devcontainer.vim's vimrc information.
@@ -128,6 +132,29 @@ devcontainer.vim stop .
 ```
 
 To resume, execute the `start` subcommand again.
+
+
+#### Updating dependencies in a running container
+
+The `update` subcommand re-runs the devcontainer lifecycle commands
+(`onCreateCommand`, `updateContentCommand`, `postCreateCommand`,
+`postStartCommand`, `postAttachCommand`) against the already-running container.
+This refreshes dependencies installed through those hooks — for example a tool
+installed via `"postCreateCommand": "npm install -g @anthropic-ai/claude-code"`
+— without rebuilding the container.
+
+```sh
+devcontainer.vim update .
+```
+
+Pass `--prebuild` to run only `onCreateCommand` and `updateContentCommand`
+(the hook intended for refreshable dependencies):
+
+```sh
+devcontainer.vim update --prebuild .
+```
+
+The container must already be running (via `start`); otherwise run `start` first.
 
 
 #### Environment deletion

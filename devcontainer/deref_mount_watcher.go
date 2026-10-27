@@ -115,7 +115,7 @@ func watchDereferencedMounts(ctx context.Context, containerID, containerHome str
 					// don't corrupt vim's full-screen rendering. OSC 2 updates the
 					// window title without touching the character-cell buffer.
 					fmt.Fprintf(os.Stderr, "\033]2;devcontainer.vim: syncing %s\007", filepath.Base(e.sourceRaw))
-					syncErr := transferDereferencedMount(containerID, containerHome, e.sourceRaw, e.targetRaw)
+					syncErr := transferDereferencedMount(containerID, containerHome, e.sourceRaw, e.targetRaw, true)
 					if syncErr != nil {
 						fmt.Fprintf(os.Stderr, "\033]2;devcontainer.vim: sync failed: %s\007", filepath.Base(e.sourceRaw))
 					} else {

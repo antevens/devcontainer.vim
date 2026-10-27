@@ -80,7 +80,20 @@ func Rm(containerID string) error {
 	return err
 }
 
+// Cp copies a file or directory into the container, logging progress to
+// stdout/stderr. Do not use it while a full-screen application (e.g. vim) owns
+// the terminal — use CpQuiet instead, since these writes corrupt the screen.
 func Cp(tagForLog string, from string, containerID string, to string) error {
+	return cp(tagForLog, from, containerID, to, false)
+}
+
+// CpQuiet behaves like Cp but emits no output, so it is safe to call from
+// background syncs that run while vim is attached to the terminal.
+func CpQuiet(tagForLog string, from string, containerID string, to string) error {
+	return cp(tagForLog, from, containerID, to, true)
+}
+
+func cp(tagForLog string, from string, containerID string, to string, quiet bool) error {
 	resolvedFrom, err := filepath.EvalSymlinks(from)
 	if err != nil {
 		resolvedFrom = from
@@ -98,13 +111,19 @@ func Cp(tagForLog string, from string, containerID string, to string) error {
 	exec.Command(containerCommand, "exec", "--user", "root", containerID, "rm", "-f", to).Run()
 
 	dockerCpArgs := []string{"cp", resolvedFrom, containerID + ":" + to}
-	fmt.Printf("Copy %s: `%s \"%s\"` ...", tagForLog, containerCommand, strings.Join(dockerCpArgs, "\" \""))
+	if !quiet {
+		fmt.Printf("Copy %s: `%s \"%s\"` ...", tagForLog, containerCommand, strings.Join(dockerCpArgs, "\" \""))
+	}
 	copyResult, err := exec.Command(containerCommand, dockerCpArgs...).CombinedOutput()
 	if err != nil {
-		fmt.Fprintln(os.Stderr, "copy error.")
-		fmt.Fprintln(os.Stderr, string(copyResult))
+		if !quiet {
+			fmt.Fprintln(os.Stderr, "copy error.")
+			fmt.Fprintln(os.Stderr, string(copyResult))
+		}
 		return err
 	}
-	fmt.Printf(" done.\n")
+	if !quiet {
+		fmt.Printf(" done.\n")
+	}
 	return nil
 }

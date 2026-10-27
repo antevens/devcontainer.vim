@@ -2,7 +2,7 @@ _completion_devcontainer_vim(){
     local prev cur cword
     _get_comp_words_by_ref -n : cur prev cword
 
-    local commands="run templates start stop down config vimrc runargs tool clean index self-update help"
+    local commands="run templates start stop update down config vimrc runargs tool clean index self-update help"
     local subcommands_run=""
     local subcommands_templates="apply"
     local subcommands_tool="vim nvim tmux devcontainer clipboard-data-receiver"

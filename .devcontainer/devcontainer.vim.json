@@ -9,7 +9,7 @@
   "runArgs": [
     "--add-host=host.docker.internal:host-gateway"
   ],
-  "postCreateCommand": "npm install -g @anthropic-ai/claude-code; npm install -g @openai/codex; npm install -g @google/gemini-cli",
+  "updateContentCommand": "npm install -g @anthropic-ai/claude-code; npm install -g @openai/codex; npm install -g @google/gemini-cli",
   "mounts": [
     {
       "type": "bind",

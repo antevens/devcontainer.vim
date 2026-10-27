@@ -91,6 +91,82 @@ func TestTransferMicroK8sConfigNotInstalled(t *testing.T) {
 	}
 }
 
+func TestFilterDockerConfig_DropsUploadRegistries(t *testing.T) {
+	input := []byte(`{
+	  "auths": {
+	    "registry.example.com": {"auth": "a"},
+	    "upload.registry.example.com": {"auth": "b"},
+	    "UPLOAD.example.com": {"auth": "c"}
+	  },
+	  "credHelpers": {
+	    "gcr.io": "gcloud",
+	    "upload.gcr.io": "gcloud"
+	  }
+	}`)
+
+	out, err := filterDockerConfig(input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var got map[string]interface{}
+	if err := json.Unmarshal(out, &got); err != nil {
+		t.Fatalf("result is not valid JSON: %v", err)
+	}
+
+	auths := got["auths"].(map[string]interface{})
+	if _, ok := auths["registry.example.com"]; !ok {
+		t.Errorf("expected non-upload registry to be kept")
+	}
+	if _, ok := auths["upload.registry.example.com"]; ok {
+		t.Errorf("expected upload registry to be dropped")
+	}
+	if _, ok := auths["UPLOAD.example.com"]; ok {
+		t.Errorf("expected UPLOAD registry to be dropped (case-insensitive)")
+	}
+
+	credHelpers := got["credHelpers"].(map[string]interface{})
+	if _, ok := credHelpers["gcr.io"]; !ok {
+		t.Errorf("expected non-upload credHelper to be kept")
+	}
+	if _, ok := credHelpers["upload.gcr.io"]; ok {
+		t.Errorf("expected upload credHelper to be dropped")
+	}
+}
+
+func TestFilterDockerConfig_PreservesOtherFields(t *testing.T) {
+	input := []byte(`{"auths":{"registry.example.com":{"auth":"a"}},"credsStore":"desktop"}`)
+
+	out, err := filterDockerConfig(input)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	var got map[string]interface{}
+	if err := json.Unmarshal(out, &got); err != nil {
+		t.Fatalf("result is not valid JSON: %v", err)
+	}
+	if got["credsStore"] != "desktop" {
+		t.Errorf("expected credsStore to be preserved, got %v", got["credsStore"])
+	}
+}
+
+func TestFilterDockerConfig_InvalidJSON(t *testing.T) {
+	if _, err := filterDockerConfig([]byte("not json")); err == nil {
+		t.Error("expected error for invalid JSON, got nil")
+	}
+}
+
+func TestTransferDockerConfigNoHostConfig(t *testing.T) {
+	original := os.Getenv("HOME")
+	os.Setenv("HOME", t.TempDir()) // empty dir — no .docker/config.json
+	defer os.Setenv("HOME", original)
+
+	if err := transferDockerConfig("fake-container", "/home/vscode"); err != nil {
+		t.Errorf("expected nil when host has no docker config, got: %v", err)
+	}
+}
+
 func TestIsVimrcTarget(t *testing.T) {
 	tests := []struct {
 		target string

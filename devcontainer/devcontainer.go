@@ -3,10 +3,12 @@ package devcontainer
 import (
 	_ "embed"
 
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+	"os/signal"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -238,6 +240,65 @@ func Down(args []string, devcontainerPath string, configDirForDevcontainer strin
 
 	err := os.RemoveAll(configDir)
 	if err != nil {
+		return err
+	}
+	return nil
+}
+
+var runUserCommandsArgsPrefix = []string{"run-user-commands"}
+
+// runUserCommandsArgs builds the argument list for
+// `devcontainer run-user-commands`. All arguments except the last (the
+// workspace folder) are forwarded verbatim. --prebuild is always injected so
+// that updateContentCommand is re-run on every invocation; duplicates are
+// silently dropped. The override config and workspace folder are appended last.
+func runUserCommandsArgs(args []string, configFilePath string, workspaceFolder string) []string {
+	userArgs := args[0 : len(args)-1]
+
+	hasPrebuild := false
+	for _, a := range userArgs {
+		if a == "--prebuild" {
+			hasPrebuild = true
+			break
+		}
+	}
+	if !hasPrebuild {
+		userArgs = append([]string{"--prebuild"}, userArgs...)
+	}
+
+	userArgs = append(userArgs, "--override-config", configFilePath, "--workspace-folder", workspaceFolder)
+	return append(runUserCommandsArgsPrefix, userArgs...)
+}
+
+// Update re-runs the container's updateContentCommand via
+// `devcontainer run-user-commands --prebuild`, which always re-runs
+// updateContentCommand even if it has executed before. This is the correct
+// lifecycle hook for idempotent dependency installs (e.g. npm install -g).
+func Update(args []string, devcontainerPath string, configFilePath string) error {
+	// Use the end of the command line arguments as the value for `--workspace-folder`
+	workspaceFolder := args[len(args)-1]
+
+	// Confirm this is actually a devcontainer workspace before doing anything.
+	stdout, _ := ReadConfiguration(devcontainerPath, "--workspace-folder", workspaceFolder)
+	if stdout == "" {
+		fmt.Printf("This directory is not a workspace for devcontainer: %s\n", workspaceFolder)
+		return nil
+	}
+
+	// Stream output live and honour Ctrl-C, mirroring startVim.
+	ctx, cancel := signal.NotifyContext(context.Background(), os.Interrupt)
+	defer cancel()
+
+	devcontainerArgs := runUserCommandsArgs(args, configFilePath, workspaceFolder)
+	fmt.Printf("run container: `%s \"%s\"`\n", devcontainerPath, strings.Join(devcontainerArgs, "\" \""))
+
+	runUserCommands := exec.CommandContext(ctx, devcontainerPath, devcontainerArgs...)
+	runUserCommands.Stdin = os.Stdin
+	runUserCommands.Stdout = os.Stdout
+	runUserCommands.Stderr = os.Stderr
+
+	if err := runUserCommands.Run(); err != nil {
+		fmt.Fprintf(os.Stderr, "Update failed. Is the container running? Try `devcontainer.vim start %s` first.\n", workspaceFolder)
 		return err
 	}
 	return nil

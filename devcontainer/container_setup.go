@@ -176,6 +176,13 @@ func transferVimFiles(containerID, containerHome, configDir, vimrc string, noCdr
 		fmt.Fprintf(os.Stderr, "Warning: failed to transfer microk8s config: %v\n", err)
 	}
 
+	// Transfer a filtered copy of the host's Docker credentials (pull-only
+	// registries). Done before dereferenced mounts so an explicit user mount
+	// can override it.
+	if err := transferDockerConfig(containerID, containerHome); err != nil {
+		fmt.Fprintf(os.Stderr, "Warning: failed to transfer docker config: %v\n", err)
+	}
+
 	for _, mount := range dereferencedMounts {
 		sourceRaw, okSource := mount["source"].(string)
 		targetRaw, okTarget := mount["target"].(string)
@@ -185,7 +192,7 @@ func transferVimFiles(containerID, containerHome, configDir, vimrc string, noCdr
 			continue
 		}
 
-		err = transferDereferencedMount(containerID, containerHome, sourceRaw, targetRaw)
+		err = transferDereferencedMount(containerID, containerHome, sourceRaw, targetRaw, false)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Warning: failed to transfer dereferenced mount %s -> %s: %v\n", sourceRaw, targetRaw, err)
 		}
@@ -236,6 +243,88 @@ func transferMicroK8sConfig(containerID, containerHome string) error {
 	return docker.Cp("microk8s-config", tmpFile.Name(), containerID, kubeDir+"/config")
 }
 
+// filterDockerConfig parses a Docker config.json and returns a filtered copy
+// that drops any registry credentials whose name contains "upload".
+// Registries matching "upload" are treated as write/push endpoints, so
+// removing them leaves the container with pull-only (effectively read-only)
+// credentials. The comparison is case-insensitive.
+func filterDockerConfig(configBytes []byte) ([]byte, error) {
+	var config map[string]interface{}
+	if err := json.Unmarshal(configBytes, &config); err != nil {
+		return nil, err
+	}
+
+	// Both maps are keyed by registry/repository name, so filter each the same way.
+	for _, section := range []string{"auths", "credHelpers"} {
+		entries, ok := config[section].(map[string]interface{})
+		if !ok {
+			continue
+		}
+		for repo := range entries {
+			if strings.Contains(strings.ToLower(repo), "upload") {
+				delete(entries, repo)
+			}
+		}
+		config[section] = entries
+	}
+
+	return json.MarshalIndent(config, "", "  ")
+}
+
+// transferDockerConfig copies the host's ~/.docker/config.json into the
+// container as $HOME/.docker/config.json, first stripping any registry
+// credentials whose name contains "upload" so only read-only (pull) registries
+// are exposed. The transferred file is made read-only inside the container to
+// reinforce that the exposed registries are for pull-only use. It silently
+// skips when the host has no Docker config.
+func transferDockerConfig(containerID, containerHome string) error {
+	hostConfig := filepath.Join(os.Getenv("HOME"), ".docker", "config.json")
+	configBytes, err := os.ReadFile(hostConfig)
+	if err != nil {
+		// No host Docker config (or unreadable) — nothing to expose.
+		return nil
+	}
+
+	filtered, err := filterDockerConfig(configBytes)
+	if err != nil {
+		return fmt.Errorf("parse docker config: %w", err)
+	}
+
+	tmpFile, err := os.CreateTemp("", "docker-config-*.json")
+	if err != nil {
+		return fmt.Errorf("create temp file for docker config: %w", err)
+	}
+	defer os.Remove(tmpFile.Name())
+
+	if _, err := tmpFile.Write(filtered); err != nil {
+		tmpFile.Close()
+		return fmt.Errorf("write docker config: %w", err)
+	}
+	if err := tmpFile.Close(); err != nil {
+		return fmt.Errorf("close docker config temp file: %w", err)
+	}
+
+	dockerDir := containerHome + "/.docker"
+	if _, err := docker.Exec(containerID, "mkdir", "-p", dockerDir); err != nil {
+		return fmt.Errorf("create .docker directory in container: %w", err)
+	}
+
+	configPath := dockerDir + "/config.json"
+	if err := docker.Cp("docker-config", tmpFile.Name(), containerID, configPath); err != nil {
+		return err
+	}
+
+	// Make the credentials read-only inside the container. Run as root so the
+	// chmod succeeds regardless of the copied file's ownership; 0444 keeps it
+	// readable by the (non-root) container user that Docker runs as.
+	chmodArgs := []string{"exec", "--user", "root", containerID, "chmod", "0444", configPath}
+	if out, err := exec.Command(containerCommand, chmodArgs...).CombinedOutput(); err != nil {
+		return fmt.Errorf("chmod docker config in container: %v: %s", err, out)
+	}
+
+	return nil
+}
+
 // isVimrcTarget returns true when target is a Vim/Neovim init file that
 // should be treated as a vimrc (merged rather than blindly overwritten).
 func isVimrcTarget(target string) bool {
@@ -263,7 +352,11 @@ func mergeVimrcContent(sourceFile, additionalFile string) ([]byte, error) {
 	return append(source, additional...), nil
 }
 
-func transferDereferencedMount(containerID string, containerHome string, sourceRaw string, targetRaw string) error {
+// transferDereferencedMount copies a dereferenced mount source into the
+// container. When quiet is true the underlying docker cp emits no output, which
+// is required for background syncs triggered by the file watcher while vim owns
+// the terminal — otherwise the copy progress lines corrupt the vim screen.
+func transferDereferencedMount(containerID string, containerHome string, sourceRaw string, targetRaw string, quiet bool) error {
 	sourceExpanded, err := util.ExtractShellVariables(strings.ReplaceAll(sourceRaw, "${localEnv:HOME}", "$HOME"))
 	if err != nil {
 		sourceExpanded = sourceRaw
@@ -300,9 +393,15 @@ func transferDereferencedMount(containerID string, containerHome string, sourceR
 			return err
 		}
 
+		if quiet {
+			return docker.CpQuiet("derefMountDir", tmpSrc+"/.", containerID, targetExpanded)
+		}
 		return docker.Cp("derefMountDir", tmpSrc+"/.", containerID, targetExpanded)
 	}
 
+	if quiet {
+		return docker.CpQuiet("derefMountFile", realPath, containerID, targetExpanded)
+	}
 	return docker.Cp("derefMountFile", realPath, containerID, targetExpanded)
 }
 
@@ -439,4 +538,3 @@ func setupClaudeLogging(containerID, containerHome string) error {
 
 	return nil
 }
-

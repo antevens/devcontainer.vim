@@ -209,6 +209,12 @@ func InstallDownTools(installDir string) (string, error) {
 	return devcontainerPath, err
 }
 
+// Install tools for Update subcommand
+func InstallUpdateTools(installDir string) (string, error) {
+	devcontainerPath, err := DEVCONTAINER(DefaultInstallerUseServices{}).Install(installDir, "", false)
+	return devcontainerPath, err
+}
+
 // SelfUpdate downloads the latest release of devcontainer.vim from GitHub and replaces the current binary
 func SelfUpdate(services InstallerUseServices) error {
 	// Get the latest release tag name from GitHub

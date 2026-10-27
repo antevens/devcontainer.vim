@@ -521,6 +521,59 @@ func main() {
 				},
 			},
 			{
+				Name:            "update",
+				Usage:           "Re-run updateContentCommand to update dependencies in a running container.",
+				UsageText:       "devcontainer.vim update [DEVCONTAINER_OPTIONS...] WORKSPACE_FOLDER",
+				HideHelp:        true,
+				SkipFlagParsing: true,
+				Action: func(cCtx *cli.Context) error {
+					// Download necessary files
+					devcontainerPath, err := tools.InstallUpdateTools(binDir)
+					if err != nil {
+						if errors.Is(err, os.ErrNotExist) {
+							fmt.Fprintf(os.Stderr, "Configuration file not found: %v\n", err)
+						} else {
+							fmt.Fprintf(os.Stderr, "Error installing update tools: %v\n", err)
+						}
+						os.Exit(1)
+					}
+
+					// Use the end of the command line arguments as the value for --workspace-folder
+					args := cCtx.Args().Slice()
+					if len(args) == 0 {
+						fmt.Fprintf(os.Stderr, "Error: missing workspace folder.\n")
+						fmt.Fprintf(os.Stderr, "Usage: devcontainer.vim update <WORKSPACE_FOLDER>\n")
+						os.Exit(1)
+					}
+					workspaceFolder := args[len(args)-1]
+
+					// Build the same merged override config that `start` uses so the
+					// lifecycle commands run against the container's configuration.
+					configFilePath, _, err := devcontainer.CreateConfigFile(devcontainerPath, workspaceFolder, configDirForDevcontainer)
+					if err != nil {
+						if errors.Is(err, os.ErrNotExist) {
+							fmt.Fprintf(os.Stderr, "Configuration file not found: %v\n", err)
+						} else {
+							fmt.Fprintf(os.Stderr, "Error creating config file: %v\n", err)
+						}
+						os.Exit(1)
+					}
+
+					// Re-run lifecycle commands against the running container
+					err = devcontainer.Update(args, devcontainerPath, configFilePath)
+					if err != nil {
+						if errors.Is(err, os.ErrPermission) {
+							fmt.Fprintf(os.Stderr, "Permission error: %v\n", err)
+						} else {
+							fmt.Fprintf(os.Stderr, "Error updating devcontainer: %v\n", err)
+						}
+						os.Exit(1)
+					}
+
+					return nil
+				},
+			},
+			{
 				Name:            "down",
 				Usage:           "Stop and remove devcontainers.",
 				UsageText:       "devcontainer.vim down WORKSPACE_FOLDER",
